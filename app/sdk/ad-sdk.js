@@ -1,6 +1,25 @@
 import { StorageKeys, normalizeBannerSize } from "./models.js";
 import { ensureArray, migrateIfNeeded, readJson } from "./storage.js";
 
+/**
+ * Джерело інвентарю банерів: opts.bannerSpots / opts.bannerCreatives, далі
+ * window.__AD_DIAG__.bannerSpots / .bannerCreatives (для вбудовування без спільного localStorage з адмінкою),
+ * інакше localStorage (той самий origin, де зберігали креативи).
+ */
+function readBannerSpotsForRender(opts = {}) {
+  if (opts.bannerSpots != null) return ensureArray(opts.bannerSpots);
+  const g = typeof globalThis !== "undefined" ? globalThis.__AD_DIAG__ : null;
+  if (g && g.bannerSpots != null) return ensureArray(g.bannerSpots);
+  return ensureArray(readJson(StorageKeys.bannerSpots, []));
+}
+
+function readBannerCreativesForRender(opts = {}) {
+  if (opts.bannerCreatives != null) return ensureArray(opts.bannerCreatives);
+  const g = typeof globalThis !== "undefined" ? globalThis.__AD_DIAG__ : null;
+  if (g && g.bannerCreatives != null) return ensureArray(g.bannerCreatives);
+  return ensureArray(readJson(StorageKeys.bannerCreatives, []));
+}
+
 function byIdMap(list) {
   const map = new Map();
   ensureArray(list).forEach((x) => {
@@ -407,8 +426,8 @@ function renderBannerTilesIntoSlot(slotEl, tiles, outerSpot, opts) {
 }
 
 export function renderBannerSlots(root = document, opts = {}) {
-  const spots = ensureArray(readJson(StorageKeys.bannerSpots, []));
-  const creatives = ensureArray(readJson(StorageKeys.bannerCreatives, []));
+  const spots = readBannerSpotsForRender(opts);
+  const creatives = readBannerCreativesForRender(opts);
 
   const spotById = byIdMap(spots);
   const slotEls = Array.from(root.querySelectorAll("[data-banner-id]"));
