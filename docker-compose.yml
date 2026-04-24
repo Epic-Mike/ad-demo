@@ -1,0 +1,8 @@
+# Локально або на ВМ: docker compose up -d
+# Порт 8080 на хості → nginx у контейнері.
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    restart: unless-stopped

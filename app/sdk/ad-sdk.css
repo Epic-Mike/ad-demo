@@ -23,8 +23,31 @@
   background: #fff;
 }
 
+/* Кілька банерів у одному плейсменті: рівні колонки, спільна висота слота */
+.adDiag-bannerTilesRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 .adDiag-bannerTile {
   box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  isolation: isolate;
+  z-index: 0;
 }
 
 /* Safety: never overflow parent containers */

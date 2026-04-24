@@ -78,15 +78,25 @@ function showPlacementIdBadgeEnabled(opts) {
   return Boolean(opts && opts.showPlacementIdBadge);
 }
 
-/** Мітка id плейсмента у правому верхньому куті (наприклад, демо-сайт) */
-function appendPlacementIdBadge(hostEl, placementId, opts) {
+function placementBadgeSizeSuffix(sizeRaw) {
+  const n = normalizeBannerSize(sizeRaw || "");
+  if (!n) return "";
+  return ` (${n.replace(/x/gi, "×")})`;
+}
+
+/**
+ * Мітка id плейсмента у правому верхньому куті (наприклад, демо-сайт).
+ * meta.bannerSize — для банерів додає суфікс у дужках, напр. «726436 (300×250)».
+ */
+function appendPlacementIdBadge(hostEl, placementId, opts, meta = {}) {
   if (!showPlacementIdBadgeEnabled(opts) || placementId == null || String(placementId).trim() === "") return;
+  const sizeSuffix = meta.bannerSize != null ? placementBadgeSizeSuffix(meta.bannerSize) : "";
   hostEl.style.position = "relative";
   hostEl.appendChild(
     el("span", {
       class: "adDiag-placementIdBadge",
       "data-ad-placement-id-badge": "1",
-      text: String(placementId),
+      text: `${String(placementId)}${sizeSuffix}`,
     }),
   );
 }
@@ -127,8 +137,8 @@ function listFittingBannerCreatives(creatives, slotW, slotH) {
 }
 
 /**
- * До maxTiles креативів у ряд, якщо ширина плейсмента дозволяє розмістити принаймні два природних блоки.
- * Інакше один менший банер. Ротація по відсортованому списку (різні креативи, якщо є).
+ * До maxTiles однакових плиток у ряд (той самий креатив повторюється), якщо ширина плейсмента
+ * дозволяє ≥2 блоки природної ширини креатива. Інакше один менший банер. Без міксу різних розмірів.
  */
 function chooseBannerTilesForSlot(fittingSorted, slotW, maxTiles = 3, gapPx = 8) {
   if (!fittingSorted.length) return [];
@@ -139,8 +149,59 @@ function chooseBannerTilesForSlot(fittingSorted, slotW, maxTiles = 3, gapPx = 8)
   const maxByWidth = Math.floor((slotW + gapPx) / unit);
   const n = Math.min(maxTiles, Math.max(1, maxByWidth));
   const tiles = [];
-  for (let i = 0; i < n; i++) tiles.push(fittingSorted[i % fittingSorted.length]);
+  for (let i = 0; i < n; i++) tiles.push(first);
   return tiles;
+}
+
+/** Креатив «менший за слот» (вміщається, але не заповнює габарит) і в ряд реально вміщаються ≥2 копії. */
+function shouldUniformTileSmallerCreative(creative, placementDims, opts) {
+  if (!creative || !placementDims || !bannerSizeFallbackEnabled(opts)) return null;
+  if (opts && opts.bannerTileWhenSmallerThanSlot === false) return null;
+  const cd = parseBannerDims(creative.size);
+  if (!cd || cd.w > placementDims.w || cd.h > placementDims.h) return null;
+  if (cd.w >= placementDims.w && cd.h >= placementDims.h) return null;
+  const tiles = chooseBannerTilesForSlot([creative], placementDims.w, 3, 8);
+  return tiles.length >= 2 ? tiles : null;
+}
+
+const MREC_SIZE = "300x250";
+
+function mrecCreativeHasRenderableContent(c) {
+  if (!c) return false;
+  if (c.type === "simple") return Boolean(c.assets?.imageDataUrl);
+  if (c.type === "selfcode") return String(c.assets?.html || "").trim().length > 0;
+  if (c.type === "html5") return true;
+  return false;
+}
+
+/** Перший 300×250 з реальним контентом (не порожній simple). */
+function findBestMrecTileCreative(creatives) {
+  const mrecs = ensureArray(creatives).filter(
+    (c) => c && normalizeBannerSize(c.size) === MREC_SIZE,
+  );
+  for (const c of mrecs) {
+    if (mrecCreativeHasRenderableContent(c)) return c;
+  }
+  return null;
+}
+
+/**
+ * Широкий слот: замість одного «мега» креатива (970×250 тощо) показати 2–3× 300×250, якщо такий креатив є
+ * і вміщується по висоті. Не чіпає плейсменти з привʼязкою creativeId.
+ * Увімкнути: opts.bannerPreferMrecTilesInWideSlots === true (наприклад демо-сайт).
+ */
+function preferMrecTilesForWideSlot(opts, spot, creative, placementDims, creatives) {
+  if (!opts || opts.bannerPreferMrecTilesInWideSlots !== true) return null;
+  if (!spot || !creative || !placementDims) return null;
+  const bound = spot.creativeId != null && String(spot.creativeId).trim() !== "";
+  if (bound) return null;
+  if (placementDims.w < 600) return null;
+  const mrec = findBestMrecTileCreative(creatives);
+  if (!mrec) return null;
+  const md = parseBannerDims(mrec.size);
+  if (!md || md.h > placementDims.h || md.w > placementDims.w) return null;
+  const tiles = chooseBannerTilesForSlot([mrec], placementDims.w, 3, 8);
+  return tiles.length >= 2 ? tiles : null;
 }
 
 function spotDimsForFallback(spot, tier, slotEl, opts, viewportWidth) {
@@ -297,7 +358,7 @@ function appendBannerCreativeContent(slotEl, creative, spot, opts, contentOpts =
       alt: "Banner",
     });
     slotEl.appendChild(img);
-    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts);
+    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts, { bannerSize: spot?.size });
     return { ok: true };
   }
 
@@ -315,7 +376,7 @@ function appendBannerCreativeContent(slotEl, creative, spot, opts, contentOpts =
       doc.write(String(creative.assets?.html || ""));
       doc.close();
     }
-    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts);
+    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts, { bannerSize: spot?.size });
     return { ok: true };
   }
 
@@ -338,6 +399,7 @@ function appendBannerCreativeContent(slotEl, creative, spot, opts, contentOpts =
 
 function renderBannerIntoSlot(slotEl, creative, spot, opts) {
   clearNode(slotEl);
+  slotEl.classList.remove("adDiag-bannerTilesRow");
   slotEl.style.width = "";
   slotEl.style.height = "";
   slotEl.style.maxWidth = "";
@@ -383,6 +445,7 @@ function renderBannerIntoSlot(slotEl, creative, spot, opts) {
 /** Кілька менших банерів у межах одного плейсмента (fallback за шириною до 3 плиток). */
 function renderBannerTilesIntoSlot(slotEl, tiles, outerSpot, opts) {
   clearNode(slotEl);
+  slotEl.classList.add("adDiag-bannerTilesRow");
   slotEl.style.width = "";
   slotEl.style.height = "";
   slotEl.style.maxWidth = "";
@@ -400,41 +463,21 @@ function renderBannerTilesIntoSlot(slotEl, tiles, outerSpot, opts) {
   const scaleOuter = fittedOuterW / w;
   const fittedOuterH = Math.max(1, Math.round(h * scaleOuter));
   slotEl.style.width = `${fittedOuterW}px`;
-  slotEl.style.minHeight = `${fittedOuterH}px`;
-  slotEl.style.height = "auto";
+  slotEl.style.height = `${fittedOuterH}px`;
+  slotEl.style.minHeight = "";
   slotEl.style.maxWidth = "100%";
   slotEl.style.boxSizing = "border-box";
-  slotEl.style.display = "flex";
-  slotEl.style.flexDirection = "row";
-  slotEl.style.flexWrap = "wrap";
-  slotEl.style.gap = "8px";
-  slotEl.style.alignItems = "flex-start";
-  slotEl.style.justifyContent = "flex-start";
-
-  const gap = 8;
-  const dimsList = tiles.map((t) => parseBannerDims(t.size)).filter(Boolean);
-  const sumNatW = dimsList.reduce((s, d) => s + d.w, 0) + gap * (tiles.length - 1);
-  let innerScale = 1;
-  if (sumNatW > fittedOuterW && sumNatW > 0) innerScale = fittedOuterW / sumNatW;
 
   let worst = { ok: true };
   tiles.forEach((creative) => {
-    const wrap = el("div", {
-      class: "adDiag-bannerTile",
-      style: { position: "relative", flex: "0 0 auto", overflow: "hidden" },
-    });
-    const cd = parseBannerDims(creative.size);
-    const iw = cd ? Math.max(1, Math.round(cd.w * innerScale)) : 100;
-    const ih = cd ? Math.max(1, Math.round(cd.h * innerScale)) : 100;
-    wrap.style.width = `${iw}px`;
-    wrap.style.height = `${ih}px`;
+    const wrap = el("div", { class: "adDiag-bannerTile" });
     slotEl.appendChild(wrap);
     const r = appendBannerCreativeContent(wrap, creative, outerSpot, opts, { skipBadge: true });
     if (!r.ok) worst = r;
     else if (r.warning) worst = { ...worst, warning: r.warning };
   });
 
-  appendPlacementIdBadge(slotEl, outerSpot?.id, opts);
+  appendPlacementIdBadge(slotEl, outerSpot?.id, opts, { bannerSize: outerSpot?.size });
   if (!worst.ok) return worst;
   return { ok: true, fallback: "smaller_tiles", warning: worst.warning };
 }
@@ -563,6 +606,31 @@ export function renderBannerSlots(root = document, opts = {}) {
         flex: hasFlexSizes(spot),
         ok: false,
         reason: "no_matching_creative",
+      };
+    }
+
+    const placementDims = parseBannerDims(normalizeBannerSize(effectiveSpot?.size || ""));
+    let uniformTiles = shouldUniformTileSmallerCreative(creative, placementDims, opts);
+    if (!uniformTiles) {
+      uniformTiles = preferMrecTilesForWideSlot(opts, spot, creative, placementDims, creatives);
+    }
+    if (uniformTiles) {
+      slotEl.style.display = "";
+      setBannerSlotBlockHidden(slotEl, false);
+      const outerSpot = {
+        ...spot,
+        size: normalizeBannerSize(`${placementDims.w}x${placementDims.h}`),
+      };
+      const r = renderBannerTilesIntoSlot(slotEl, uniformTiles, outerSpot, opts);
+      const tileId = uniformTiles[0]?.id;
+      return {
+        spotId,
+        spot,
+        tier,
+        flex: hasFlexSizes(spot),
+        creativeId: tileId != null ? String(tileId) : null,
+        pickedSize: outerSpot.size,
+        ...r,
       };
     }
 

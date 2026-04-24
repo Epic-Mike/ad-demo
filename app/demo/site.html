@@ -221,6 +221,13 @@
         margin: 0 0 14px;
         line-height: 1.25;
       }
+      .demoSubhead {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 22px 0 10px;
+        line-height: 1.3;
+      }
       .adBreak {
         margin: 24px 0;
         clear: both;
@@ -277,6 +284,16 @@
         box-sizing: border-box;
       }
       .bannerSlot[data-banner-id] { background: #fff3cd; }
+      /* Заповнений банером слот: без жовтого, лише ледь помітна рамка */
+      .bannerSlot:has(.adDiag-bannerImg),
+      .bannerSlot:has(.adDiag-bannerFrame),
+      .bannerSlot:has(.adDiag-html5Stub),
+      .bannerSlot.adDiag-bannerTilesRow {
+        background: transparent;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        border-radius: 8px;
+        padding: 0;
+      }
       .bannerSlotHint { font-size: 12px; color: #92400e; font-weight: 900; }
 
       .inspectorRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -366,7 +383,7 @@
                   <h1 class="demoHeadline">Coastal cities accelerate sea-wall plans after record surge season</h1>
                   <p class="demoMeta">
                     <strong>By Eleanor Whitaker</strong> · Climate correspondent ·
-                    <time datetime="2026-04-23">April 23, 2026</time> · 5 min read
+                    <time datetime="2026-04-23">April 23, 2026</time> · 14 min read
                   </p>
 
                   <figure class="demoFigure">
@@ -398,6 +415,17 @@
                       can see multiple exceedances within a single decade. That uncertainty complicates bond covenants, insurance
                       renewals, and the politics of telling homeowners their street is now in a different risk tier.
                     </p>
+                    <p>
+                      Satellite altimetry teams now publish weekly composites that harbour masters glance at between vessel
+                      queues. The charts do not stop cargo, but they change which holds get priority when a low-pressure system
+                      deepens faster than the morning forecast. In Rotterdam and Singapore, tug operators describe a new rhythm:
+                      text chains that light up hours before the official advisory upgrades.
+                    </p>
+                    <p>
+                      Historians note that seawalls are also memory devices — each concrete pour encodes which coalition held power,
+                      which consultant won the tender, and which community agreed to shoulder debt service. Future archives may read
+                      these layers the way we read tree rings: not smooth, but legible if you know the code.
+                    </p>
                   </div>
 
                   <div class="bannerSlotBlock adBreak" data-banner-slot-block>
@@ -416,6 +444,19 @@
                       Meanwhile, bond markets are watching. A handful of cities have piloted “resilience” bonds to spread costs
                       across twenty-year horizons; rating agencies say disclosure of flood exposure will weigh more heavily in
                       future reviews.
+                    </p>
+                    <p>
+                      Secondary analysts have started tagging municipal issuers with coarse “wet feet” scores derived from lidar
+                      and tide-gauge proximity. The methodology is contested — elevation alone ignores pumping capacity — but
+                      pension funds use the sort as a first-pass screen, which means treasurers now receive questions that have
+                      nothing to do with last quarter’s collections.
+                    </p>
+                    <h3 class="demoSubhead">Insurance loops and the paperwork of retreat</h3>
+                    <p>
+                      Where policies lapse, owners face a paperwork trap: to qualify for certain grants they must prove continuous
+                      coverage, but the market has moved on. Non-profits report month-long clinics helping residents scan deeds and
+                      flood certificates into formats underwriting desks will actually open. It is unglamorous labour, and it
+                      determines who gets a buyout offer before the next season.
                     </p>
                   </div>
 
@@ -440,6 +481,29 @@
                         is longer documents, more billable hours, and slower closings — which, in construction season, can mean
                         another winter without tie-backs poured.
                       </p>
+                      <p>
+                        A clerk in a mid-Atlantic port described exporting the same levee drawing set in three different PDF
+                        profiles depending on the investor’s document portal — “A-1b for the pension crowd, A-2 for the bank, and a
+                        flattened archive for the state.” Laughter in the meeting room did not mean the hours vanished.
+                      </p>
+                    </div>
+                  </section>
+
+                  <section class="demoSection" aria-labelledby="sec-lab">
+                    <h2 id="sec-lab">What the lab models changed this spring</h2>
+                    <div class="demoBody">
+                      <p>
+                        Coupled ocean–atmosphere runs that used to be academic curiosities now arrive on desks Friday afternoons
+                        with executive summaries. The shift is less about raw compute — though clusters are larger — than about
+                        translation layers: meteorologists paired with budget officers who ask what a +15 cm scenario does to a
+                        berm crest designed in 2011.
+                      </p>
+                      <p>
+                        Two universities have spun out small firms that sell “stress packs” to cities: bundled wind, surge, and
+                        pluvial sequences with confidence intervals expressed in language bond counsel can paste. Purists grumble
+                        about commodified risk, but mayors facing election calendars describe the packs as a shared grammar that
+                        finally lets public works and finance speak in the same meeting.
+                      </p>
                     </div>
                   </section>
 
@@ -452,6 +516,27 @@
                   <div data-native-slot-block class="adBreak">
                     <div data-native-widget data-native-widget-id="112345678"></div>
                   </div>
+
+                  <section class="demoSection" aria-labelledby="sec-grid">
+                    <h2 id="sec-grid">Grid operators watch the coast, too</h2>
+                    <div class="demoBody">
+                      <p>
+                        Interconnection queues slow when substations sit behind flood barriers that are themselves mid-upgrade.
+                        Planners in three states said they now schedule cable pulls against tidal windows the way marine contractors
+                        do — not superstition, but empirical loss: a flooded vault last year delayed a hospital microgrid by eight
+                        months.
+                      </p>
+                      <p>
+                        Battery siting guidelines drafted in landlocked capitals rarely mention salt fog until operators annotate
+                        them with photographs of corroded busbars. The annotations travel back upstream as footnotes, then as
+                        bullet points, then as checklist items procurement officers cannot waive without a signed variance.
+                      </p>
+                      <p>
+                        None of this appears in the romance of “smart cities.” It shows up in late-night emails about whether a
+                        spare transformer can be barged in if the causeway closes — mundane until it is the only path.
+                      </p>
+                    </div>
+                  </section>
 
                   <section class="demoSection" aria-labelledby="sec-voices">
                     <h2 id="sec-voices">Voices from the waterfront</h2>
@@ -487,8 +572,17 @@
                       </p>
                       <p>
                         In one harbour district, shopkeepers have started mapping alternate delivery routes for the months when
-                        cranes will block the usual quay. It is a small example of how adaptation ripples through economies that
+                        cranes will block the usual quay. It                         is a small example of how adaptation ripples through economies that
                         rarely appear in headline budgets.
+                      </p>
+                      <p>
+                        Fishmongers on the same quay track crane schedules on a shared spreadsheet someone colour-coded by noise
+                        level. They joke that it is their own futures market — except the commodity is sleep, and the contract month
+                        is “when the piles start.”
+                      </p>
+                      <p>
+                        Urban planners call these adjustments “informal logistics overlays.” To the people moving ice and styrofoam
+                        before dawn, they are simply how you keep product cold when the usual door is blocked by fencing.
                       </p>
                     </div>
                     <div class="bannerSlotBlock" data-banner-slot-block style="margin:0;">
@@ -503,6 +597,45 @@
                       <div class="bannerSlotHint">data-banner-id="726441" · flexible sizes configurable in Banner Web</div>
                     </div>
                   </div>
+
+                  <section class="demoSection" aria-labelledby="sec-mega-after">
+                    <h2 id="sec-mega-after">After the ribbon-cutting</h2>
+                    <div class="demoBody">
+                      <p>
+                        Opening ceremonies rarely budget for the first five years of inspection drones, grout probes, and the
+                        vegetation management contracts that keep access roads passable when storms stack. Maintenance lines in
+                        capital plans are where optimism historically hid; auditors this year asked for names attached to each
+                        line, not departments.
+                      </p>
+                      <p>
+                        Community boards requested “plain language” dashboards that show which levee segment is green, yellow, or
+                        red. Engineers pushed back — colour implies precision the sensors do not always have — and the compromise
+                        is a footnote in ten-point type that blinks on hover. Progress, of a sort.
+                      </p>
+                      <p>
+                        Volunteers who walk embankments on weekends photograph hairline cracks with phones calibrated against a
+                        plastic ruler. The images feed a civic Git repository someone mirrors to the city archive every Sunday
+                        night. It is citizen science with liability waivers stapled to the back page.
+                      </p>
+                    </div>
+                  </section>
+
+                  <section class="demoSection" aria-labelledby="sec-diplomacy">
+                    <h2 id="sec-diplomacy">Diplomacy at the river mouth</h2>
+                    <div class="demoBody">
+                      <p>
+                        Binational commissions spent March arguing about telemetry sharing — not the glamorous part of adaptation,
+                        but the part that determines whether a surge gate opens when only one country’s model shouts. Translators
+                        fluent in both hydrology and procurement slang billed overtime; everyone agreed the invoices were cheaper
+                        than the alternative.
+                      </p>
+                      <p>
+                        Downstream farmers asked for advance notice of freshwater releases timed to sediment flushing. Upstream
+                        cities needed those releases to keep intakes from clogging after storms. The spreadsheet that reconciled
+                        the two wishes has twelve tabs and one nervous owner.
+                      </p>
+                    </div>
+                  </section>
 
                   <div data-native-slot-block class="adBreak">
                     <div data-native-widget data-native-widget-id="112345680"></div>
@@ -520,6 +653,48 @@
                         Separately, a cross-border working group will compare levee inspection intervals. Harmonisation sounds
                         dull until you realise a freight terminal on one side of a river answered to a different cadence than its
                         mirror image downstream. Auditors have begun asking why.
+                      </p>
+                      <p>
+                        Lobbyists circulated draft amendments that would exempt certain “legacy” districts from new elevation
+                        rules if they committed to phased retrofits. Housing advocates called the carve-outs a recipe for
+                        patchwork vulnerability; industry groups said absolutism would freeze renovation altogether. Staffers
+                        colour-coded comments until the PDF looked like a heat map of anxiety.
+                      </p>
+                    </div>
+                  </section>
+
+                  <section class="demoSection" aria-labelledby="sec-briefing">
+                    <h2 id="sec-briefing">Briefing book: numbers that survived the red pen</h2>
+                    <div class="demoBody">
+                      <p>
+                        An appendix everyone pretends not to read lists expected days above 35 °C for dockworkers wearing kit
+                        that was designed for a cooler decade. Union stewards asked for misting stations; port authorities counted
+                        outlets and quietly ordered more cable tray.
+                      </p>
+                      <p>
+                        Salt intrusion curves migrated three slides to the right in the final deck — not because science changed,
+                        but because elected officials requested “less alarming y-axes” for the breakfast television hit. The
+                        footnote with the unscaled chart is there for whoever Ctrl-Fs “original.”
+                      </p>
+                      <p>
+                        Economists hired by opposing camps produced dueling multipliers for every dollar spent on berms. The truth
+                        likely sits between, dampened by execution risk nobody models because it is embarrassing to admit how often
+                        concrete tests late.
+                      </p>
+                    </div>
+                  </section>
+
+                  <section class="demoSection" aria-labelledby="sec-close">
+                    <h2 id="sec-close">A note on tomorrow’s tide</h2>
+                    <div class="demoBody">
+                      <p>
+                        Reporters will return to these harbours after the next named storm, when the questions are no longer
+                        abstract. For now, the story is preparation measured in rebar, rivets, late-night votes, and the quiet
+                        patience of people who already know which streets flood first.
+                      </p>
+                      <p>
+                        <em>Additional reporting by colleagues in Hamburg, Manila, and Halifax. Graphics by the Times News data
+                        desk. Editing: N. Ortega.</em>
                       </p>
                     </div>
                   </section>
@@ -561,6 +736,20 @@
                       <div>
                         <a href="#">Premier League: title race goes to final fixtures after late equalizer</a>
                         <div class="meta">Sports · 8h ago</div>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="https://picsum.photos/seed/tn-side5/144/104" width="144" height="104" alt="" loading="lazy" />
+                      <div>
+                        <a href="#">Regional transit agency delays fare hike after union talks reopen</a>
+                        <div class="meta">Transit · 10h ago</div>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="https://picsum.photos/seed/tn-side6/144/104" width="144" height="104" alt="" loading="lazy" />
+                      <div>
+                        <a href="#">Museum returns ceremonial objects to island nation under new repatriation pact</a>
+                        <div class="meta">Culture · 12h ago</div>
                       </div>
                     </li>
                   </ul>
@@ -642,6 +831,15 @@
       function seedBannerInventoryOnly() {
         writeJson(StorageKeys.bannerCreatives, [
           { id: "banner-" + uuid(), createdAt: nowIso(), type: "simple", size: "300x250", assets: { imageDataUrl: null } },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "300x250",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 16px system-ui;background:#0f766e;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">MREC 300×250</a></body></html>`,
+            },
+          },
           {
             id: "banner-" + uuid(),
             createdAt: nowIso(),
@@ -861,6 +1059,7 @@
           viewportWidth,
           showEmptyPlacements,
           showPlacementIdBadge: true,
+          bannerPreferMrecTilesInWideSlots: true,
         });
         const snapshot = {
           runtime,
