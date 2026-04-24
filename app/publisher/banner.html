@@ -117,6 +117,7 @@
     </style>
 </head>
 <body>
+    <script src="../shared/require-auth.js"></script>
     <div class="container">
         <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
           <span class="uiAppNav-label">Pages</span>
@@ -126,6 +127,7 @@
           <a class="active" href="./banner.html">Banner Web</a>
           <a href="./native.html">Native Web</a>
           <a href="../demo/site.html">Demo site</a>
+          <a class="uiLink" style="margin-left: auto" href="../login.html" onclick="try { sessionStorage.removeItem('adDiagAuth'); } catch (e) {}">Log out</a>
         </nav>
         <div class="uiTopbar">
           <div>
