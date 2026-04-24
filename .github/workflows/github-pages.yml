@@ -1,9 +1,14 @@
 # Увімкніть у репозиторії: Settings → Pages → Build and deployment → Source: GitHub Actions.
 # Після push у main/master артефакт із каталогу app/ публікується на GitHub Pages.
+#
+# Якщо deploy падає з "Multiple artifacts named github-pages": не натискайте лише
+# "Re-run failed jobs" після успішного upload — зробіть новий запуск (push або
+# Actions → цей workflow → Run workflow) — див. github.com/orgs/community/discussions/111260
 name: GitHub Pages
 on:
   push:
     branches: [main, master]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,10 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,5 +28,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: app
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4

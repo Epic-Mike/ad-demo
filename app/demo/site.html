@@ -294,6 +294,16 @@
         border-radius: 8px;
         padding: 0;
       }
+      /* Ряд плиток: .bannerSlot вище задає display:grid і перебиває flex з ad-sdk.css → плитки ставали в колонку */
+      .bannerSlot.adDiag-bannerTilesRow {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 8px;
+        place-items: unset;
+        justify-content: flex-start;
+      }
       .bannerSlotHint { font-size: 12px; color: #92400e; font-weight: 900; }
 
       .inspectorRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }

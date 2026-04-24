@@ -137,8 +137,8 @@ function listFittingBannerCreatives(creatives, slotW, slotH) {
 }
 
 /**
- * До maxTiles однакових плиток у ряд (той самий креатив повторюється), якщо ширина плейсмента
- * дозволяє ≥2 блоки природної ширини креатива. Інакше один менший банер. Без міксу різних розмірів.
+ * До maxTiles плиток однакового розміру у ряд, якщо ширина плейсмента дозволяє ≥2 блоки.
+ * Кілька креативів з тим самим size чергуються по позиціях (A,B,A,…). Без міксу різних розмірів.
  */
 function chooseBannerTilesForSlot(fittingSorted, slotW, maxTiles = 3, gapPx = 8) {
   if (!fittingSorted.length) return [];
@@ -148,8 +148,13 @@ function chooseBannerTilesForSlot(fittingSorted, slotW, maxTiles = 3, gapPx = 8)
   const unit = d.w + gapPx;
   const maxByWidth = Math.floor((slotW + gapPx) / unit);
   const n = Math.min(maxTiles, Math.max(1, maxByWidth));
+  const normFirst = normalizeBannerSize(first.size);
+  const pool = fittingSorted
+    .filter((c) => c && normalizeBannerSize(c.size) === normFirst)
+    .sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true }));
+  if (!pool.length) return [first];
   const tiles = [];
-  for (let i = 0; i < n; i++) tiles.push(first);
+  for (let i = 0; i < n; i++) tiles.push(pool[i % pool.length]);
   return tiles;
 }
 
@@ -174,15 +179,13 @@ function mrecCreativeHasRenderableContent(c) {
   return false;
 }
 
-/** Перший 300×250 з реальним контентом (не порожній simple). */
-function findBestMrecTileCreative(creatives) {
+/** Усі 300×250 з реальним контентом (для тилювання широкого слота з чергуванням креативів). */
+function listMrecTileCreatives(creatives) {
   const mrecs = ensureArray(creatives).filter(
-    (c) => c && normalizeBannerSize(c.size) === MREC_SIZE,
+    (c) => c && normalizeBannerSize(c.size) === MREC_SIZE && mrecCreativeHasRenderableContent(c),
   );
-  for (const c of mrecs) {
-    if (mrecCreativeHasRenderableContent(c)) return c;
-  }
-  return null;
+  mrecs.sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true }));
+  return mrecs;
 }
 
 /**
@@ -196,11 +199,11 @@ function preferMrecTilesForWideSlot(opts, spot, creative, placementDims, creativ
   const bound = spot.creativeId != null && String(spot.creativeId).trim() !== "";
   if (bound) return null;
   if (placementDims.w < 600) return null;
-  const mrec = findBestMrecTileCreative(creatives);
-  if (!mrec) return null;
-  const md = parseBannerDims(mrec.size);
+  const mrecs = listMrecTileCreatives(creatives);
+  if (!mrecs.length) return null;
+  const md = parseBannerDims(mrecs[0].size);
   if (!md || md.h > placementDims.h || md.w > placementDims.w) return null;
-  const tiles = chooseBannerTilesForSlot([mrec], placementDims.w, 3, 8);
+  const tiles = chooseBannerTilesForSlot(mrecs, placementDims.w, 3, 8);
   return tiles.length >= 2 ? tiles : null;
 }
 
@@ -622,13 +625,13 @@ export function renderBannerSlots(root = document, opts = {}) {
         size: normalizeBannerSize(`${placementDims.w}x${placementDims.h}`),
       };
       const r = renderBannerTilesIntoSlot(slotEl, uniformTiles, outerSpot, opts);
-      const tileId = uniformTiles[0]?.id;
+      const tileIds = uniformTiles.map((t) => t.id).filter((id) => id != null);
       return {
         spotId,
         spot,
         tier,
         flex: hasFlexSizes(spot),
-        creativeId: tileId != null ? String(tileId) : null,
+        creativeId: tileIds.length ? [...new Set(tileIds.map(String))].join(",") : null,
         pickedSize: outerSpot.size,
         ...r,
       };
