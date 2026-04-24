@@ -638,9 +638,8 @@
         mobileBtn.classList.toggle("active", runtime.device === "mobile");
       }
 
-      /** Запис демо-даних у LocalStorage без перемальовування (для першого відкриття на хостингу). */
-      function seedDataOnly() {
-        // Same seed as index.html (keep it here for convenience)
+      /** Банерний інвентар (креативи + spots) — окремо, щоб на хостингу не затирати натив, якщо він уже є. */
+      function seedBannerInventoryOnly() {
         writeJson(StorageKeys.bannerCreatives, [
           { id: "banner-" + uuid(), createdAt: nowIso(), type: "simple", size: "300x250", assets: { imageDataUrl: null } },
           {
@@ -720,6 +719,9 @@
             },
           },
         ]);
+      }
+
+      function seedNativeInventoryOnly() {
         writeJson(StorageKeys.nativeCreatives, [
           {
             id: "native-" + uuid(),
@@ -761,6 +763,11 @@
           })),
         );
         writeJson(StorageKeys.nativeWidgetSettings, cloneJson(defaultSettings));
+      }
+
+      function seedDataOnly() {
+        seedBannerInventoryOnly();
+        seedNativeInventoryOnly();
       }
 
       function seed() {
@@ -898,11 +905,14 @@
         renderNow();
       });
 
-      // init — на новому домені (наприклад Render) LocalStorage порожній: підставляємо демо, інакше банери не зʼявляться
+      // init — на Render часто лише частина ключів порожня (або після часткового скидання): добираємо демо без зайвого затиру того, що вже є
       {
         const bc0 = ensureArray(readJson(StorageKeys.bannerCreatives, []));
         const bs0 = ensureArray(readJson(StorageKeys.bannerSpots, []));
-        if (!bc0.length && !bs0.length) seedDataOnly();
+        const nc0 = ensureArray(readJson(StorageKeys.nativeCreatives, []));
+        const nw0 = ensureArray(readJson(StorageKeys.nativeWidgets, []));
+        if (!bc0.length || !bs0.length) seedBannerInventoryOnly();
+        if (!nc0.length || !nw0.length) seedNativeInventoryOnly();
       }
 
       // init

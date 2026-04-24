@@ -1,0 +1,8 @@
+# https://render.com/docs/blueprint-spec
+# Статичний сайт: корінь документів = каталог app/ (шляхи як у README: /index.html, /demo/site.html).
+services:
+  - type: web
+    name: ad-diagnostics-static
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: ./app

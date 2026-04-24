@@ -20,6 +20,20 @@ function readBannerCreativesForRender(opts = {}) {
   return ensureArray(readJson(StorageKeys.bannerCreatives, []));
 }
 
+function readNativeWidgetsForRender(opts = {}) {
+  if (opts.nativeWidgets != null) return ensureArray(opts.nativeWidgets);
+  const g = typeof globalThis !== "undefined" ? globalThis.__AD_DIAG__ : null;
+  if (g && g.nativeWidgets != null) return ensureArray(g.nativeWidgets);
+  return ensureArray(readJson(StorageKeys.nativeWidgets, []));
+}
+
+function readNativeCreativesForRender(opts = {}) {
+  if (opts.nativeCreatives != null) return ensureArray(opts.nativeCreatives);
+  const g = typeof globalThis !== "undefined" ? globalThis.__AD_DIAG__ : null;
+  if (g && g.nativeCreatives != null) return ensureArray(g.nativeCreatives);
+  return ensureArray(readJson(StorageKeys.nativeCreatives, []));
+}
+
 function byIdMap(list) {
   const map = new Map();
   ensureArray(list).forEach((x) => {
@@ -829,8 +843,8 @@ function nativeItemMarkup(creative) {
 
 export function renderNativeWidgets(root = document, opts = {}) {
   migrateIfNeeded();
-  const widgets = ensureArray(readJson(StorageKeys.nativeWidgets, []));
-  const creatives = ensureArray(readJson(StorageKeys.nativeCreatives, []));
+  const widgets = readNativeWidgetsForRender(opts);
+  const creatives = readNativeCreativesForRender(opts);
   const runtime = getRuntime();
 
   const containers = Array.from(root.querySelectorAll("[data-native-widget]"));

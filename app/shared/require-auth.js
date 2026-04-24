@@ -9,6 +9,8 @@
   if (!path || path === "/") path = "index.html";
   if (path.endsWith("/")) path = path + "index.html";
   if (path === "login.html" || /(^|\/)login\.html$/i.test(path)) return;
+  /* Публічне демо віртуального сайту: на Render гості мають бачити креативи без логіну. */
+  if (/(^|\/)demo\/site\.html$/i.test(path)) return;
   try {
     if (sessionStorage.getItem("adDiagAuth") === "1") return;
   } catch (e) {}
