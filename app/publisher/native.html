@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publisher — Native inventory</title>
+    <link rel="stylesheet" href="../shared/ui.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 18px; }
+
+        .format-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .format-tab { min-width: 104px; padding: 5px 18px; border: 1px solid #aaa; background: #f7f7f7; color: #555; font-size: 13px; line-height: 1; text-align: center; cursor: default; border-radius: 999px; }
+        .format-tab.active { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+
+        .main-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+        .settings-column { min-width: 0; }
+        .preview-column { min-width: 0; position: sticky; top: 20px; }
+        @media (max-width: 1100px) { .main-layout { grid-template-columns: 1fr; } .preview-column { position: static; } }
+
+        .section { background: white; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+        .section-header { padding: 14px 18px; background: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .section-header h2 { font-size: 16px; color: #555; font-weight: 800; }
+        .section-header .arrow { font-size: 12px; transition: transform 0.2s; }
+        .section.collapsed .section-header .arrow { transform: rotate(-90deg); }
+        .section.collapsed .section-body { display: none; }
+        .section-body { padding: 18px; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .small-hint { font-size: 12px; color: #6b7280; line-height: 1.4; margin: -6px 0 14px; }
+        label { display: block; font-size: 13px; color: #374151; margin-bottom: 6px; font-weight: 700; }
+        input[type="text"], input[type="number"], select {
+            width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px;
+            color: #111827; background: white;
+        }
+        input:focus, select:focus { outline: none; border-color: #5cb85c; }
+        input[type="checkbox"] { margin-right: 6px; width: 16px; height: 16px; vertical-align: middle; }
+        .checkbox-label { display: inline-flex; align-items: center; cursor: pointer; font-size: 13px; color: #111827; font-weight: 700; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+        .subsection { margin-bottom: 20px; }
+        .subsection:last-child { margin-bottom: 0; }
+        .subsection h3 { font-size: 14px; color: #555; font-weight: 800; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .color-input-wrapper { display: flex; align-items: center; gap: 8px; }
+        .color-input-wrapper input[type="text"] { flex: 1; }
+        .color-picker-native {
+          width: 32px;
+          height: 32px;
+          padding: 0;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          cursor: pointer;
+          flex-shrink: 0;
+          background: transparent;
+        }
+        .color-picker-native::-webkit-color-swatch-wrapper { padding: 2px; }
+        .color-picker-native::-webkit-color-swatch { border: none; border-radius: 6px; }
+        .color-picker-native::-moz-color-swatch { border: none; border-radius: 6px; }
+
+        .actions { margin-top: 20px; }
+        .btn-save {
+            background: var(--green-700); color: white; border: none; padding: 10px 18px; border-radius: 10px;
+            font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+        }
+        .btn-save:hover { background: var(--green-800); }
+
+        /* Single row: placement fields + actions (hints on control titles) */
+        .uiTopbar--publisherNative {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .invToolbar {
+          display: flex;
+          align-items: flex-end;
+          flex-wrap: wrap;
+          gap: 10px 12px;
+          margin-top: 10px;
+        }
+        .invToolbar > .invCol {
+          flex: 1 1 140px;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .invToolbar > .invColStatus {
+          flex: 0 0 auto;
+          min-width: auto;
+        }
+        .invToolbar > .invCol label {
+          margin-bottom: 0;
+          font-size: 12px;
+          white-space: nowrap;
+        }
+        .invToolbar > .invCol select,
+        .invToolbar > .invCol input[type="text"],
+        .invToolbar > .invCol input[type="number"] {
+          width: 100%;
+          min-width: 0;
+        }
+        .invColStatus .statusRow {
+          display: inline-flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 8px;
+          min-height: 38px;
+        }
+        .invColStatus .statusRow label {
+          font-size: 12px;
+          font-weight: 700;
+          margin: 0;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .invColStatus .statusRow input[type="checkbox"] { margin: 0; }
+        .invToolbarBtns {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+          margin-left: auto;
+        }
+        @media (max-width: 700px) {
+          .invToolbarBtns { margin-left: 0; width: 100%; }
+        }
+
+        .preview-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 14px; min-width: 0; }
+        .preview-card h3 { font-size: 16px; color: #666; margin-bottom: 12px; font-weight: 500; text-align: center; }
+        .preview-device-toggle { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .preview-device-toggle button {
+            flex: 0 1 auto;
+            padding: 6px 16px; border: 1px solid #ccc; background: white; font-size: 13px; cursor: pointer;
+            border-radius: 4px; color: #555;
+        }
+        .preview-device-toggle button.active { background: #5cb85c; color: white; border-color: #5cb85c; }
+
+        /* Mobile preview: constrain width to layout breakpoint so aspect-ratio images don't balloon */
+        .preview-viewport {
+          width: 100%;
+          margin: 0 auto;
+        }
+        .preview-viewport--mobile {
+          max-width: min(100%, var(--preview-mobile-bp, 450px));
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          overflow-x: auto;
+          background: #fafafa;
+        }
+
+        .native-widget { border: 1px solid #e5e7eb; background: #fff; border-radius: 10px; overflow: hidden; display:flex; flex-direction:column; }
+        .native-widget .ad-label { font-size: 10px; color: #999; text-transform: uppercase; padding: 4px 10px; text-align: right; letter-spacing: 0.03em; }
+        .native-grid { display: grid; gap: 10px; padding: 10px; }
+        .native-item { display: flex; gap: 12px; cursor: pointer; transition: opacity 0.2s; min-width:0; }
+        .native-item:hover { opacity: 0.85; }
+        .native-item:hover .title { color: var(--title-hover-color, inherit) !important; }
+        .native-item .thumb {
+            width: 120px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 11px; overflow: hidden;
+        }
+        .native-item.zoom-enabled:hover .thumb { transform: scale(1.03); }
+        .native-item .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .native-item .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .native-item .title { font-size: 14px; font-weight: 900; color: #333; margin-bottom: 6px; line-height: 1.3; }
+        .native-item .desc { font-size: 12px; color: #666; line-height: 1.4; margin-bottom: 8px; }
+        .native-item .footer { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: auto; }
+        .native-item .brand { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; min-width: 0; margin-bottom: 6px; }
+        .native-item .brand-logo {
+          width: 16px; height: 16px; background: #ddd; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #6b7280;
+          overflow: hidden;
+        }
+        .native-item .brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .native-item .cta {
+            background: #3b82f6; color: white; padding: 5px 14px; border-radius: 10px; font-size: 12px; font-weight: 900;
+            border: none; white-space: nowrap; flex-shrink: 0; cursor: pointer;
+        }
+        .native-item .cta:hover { background: var(--cta-hover-bg, #2563eb) !important; }
+
+        .native-widget.mobile .native-item { flex-direction: column; }
+        /* Height comes from aspect-ratio (inline in updatePreview); fixed px made cards wrong vs settings */
+        .native-widget.mobile .native-item .thumb { width: 100%; height: auto; }
+        .native-widget.mobile .native-item .footer { margin-top: 8px; }
+
+        /* When many columns: use compact vertical cards to avoid overflow/overlap */
+        .native-widget.compact .native-item { flex-direction: column; }
+        .native-widget.compact .native-item .thumb { width: 100%; height: 110px; }
+        .native-widget.compact .native-item .footer { margin-top: 8px; }
+
+        /* 4+ columns in preview: tighter so all cards fit in the column */
+        .native-widget.compact-dense .native-grid { gap: 6px; padding: 6px; }
+        .native-widget.compact-dense .native-item .thumb { height: 64px; }
+        .native-widget.compact-dense .native-item .title { font-size: 11px; margin-bottom: 4px; line-height: 1.25; }
+        .native-widget.compact-dense .native-item .desc {
+          font-size: 10px; margin-bottom: 6px; line-height: 1.3;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .native-widget.compact-dense .native-item .footer { gap: 4px; margin-top: 4px; }
+        .native-widget.compact-dense .native-item .brand { font-size: 9px; gap: 4px; margin-bottom: 4px; }
+        .native-widget.compact-dense .native-item .brand-logo { width: 12px; height: 12px; font-size: 8px; }
+        .native-widget.compact-dense .native-item .cta { padding: 3px 8px; font-size: 10px; border-radius: 6px; }
+        .native-widget.compact-dense .ad-label { font-size: 9px; padding: 2px 6px; }
+        .native-widget.mobile.compact-dense .native-item .thumb { max-height: 64px; }
+
+        .preview-info { margin-top: 14px; padding: 10px 12px; background: #f9fafb; border-radius: 10px; font-size: 12px; color: #6b7280; }
+        .preview-info code { background: #e5e7eb; padding: 2px 6px; border-radius: 8px; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
+          <span class="uiAppNav-label">Pages</span>
+          <a href="../index.html">Home</a>
+          <a href="../advertiser/banner.html">Banner Adv</a>
+          <a href="../advertiser/native.html">Native Adv</a>
+          <a href="./banner.html">Banner Web</a>
+          <a class="active" href="./native.html">Native Web</a>
+          <a href="../demo/site.html">Demo site</a>
+        </nav>
+        <div class="uiTopbar uiTopbar--publisherNative">
+            <h1>Publisher — inventory</h1>
+            <div class="uiSub"><a class="uiLink" href="../index.html">← Home</a> · Inventory is stored in LocalStorage</div>
+            <div class="invToolbar">
+              <div class="invCol">
+                <label for="widgetSelect">Placement (widget)</label>
+                <select id="widgetSelect" title="Select an existing placement or create a new one."><option value="">— New —</option></select>
+              </div>
+              <div class="invCol">
+                <label for="widgetId">ID</label>
+                <input type="number" id="widgetId" value="112345678" title="On site: data-native-widget-id">
+              </div>
+              <div class="invCol">
+                <label for="widgetName">Name</label>
+                <input type="text" id="widgetName" value="Native widget 1">
+              </div>
+              <div class="invCol invColStatus">
+                <div class="statusRow">
+                  <input type="checkbox" id="widgetStatus" checked>
+                  <label for="widgetStatus">Active</label>
+                </div>
+              </div>
+              <div class="invToolbarBtns">
+                <button class="uiBtn" type="button" id="loadBtn">Load from storage</button>
+                <button class="uiBtn" type="button" id="resetBtn">Reset storage</button>
+              </div>
+            </div>
+        </div>
+
+        <div class="format-tabs">
+            <div class="format-tab">Web Push</div>
+            <div class="format-tab">InPage</div>
+            <div class="format-tab">OnClick</div>
+            <div class="format-tab">Banner</div>
+            <div class="format-tab active">Native</div>
+        </div>
+
+        <div class="main-layout">
+            <div class="settings-column">
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Layouts</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="fixedSize">
+                                Fixed Widget Size
+                            </label>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Width</label>
+                                <input type="number" value="250" id="widgetWidth">
+                            </div>
+                            <div class="form-group">
+                                <label>Height</label>
+                                <input type="number" value="200" id="widgetHeight">
+                            </div>
+                        </div>
+                        <div class="subsection">
+                            <h3>Desktop & Tablet</h3>
+                            <div class="form-group">
+                                <label>Columns</label>
+                                <select id="desktopCols">
+                                    <option>1</option><option>2</option><option>3</option><option selected>4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rows</label>
+                                <select id="desktopRows">
+                                    <option selected>1</option><option>2</option><option>3</option><option>4</option>
+                                </select>
+                            </div>
+                            <div class="two-col">
+                                <div class="form-group">
+                                    <label>Horizontal Spacing</label>
+                                    <input type="number" value="10" id="desktopHSpace">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vertical Spacing</label>
+                                    <input type="number" value="10" id="desktopVSpace">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Image Aspect Ratio</label>
+                                <select id="desktopAspect">
+                                    <option>1:1</option><option selected>3:2</option><option>16:9</option><option>4:3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Text Lines</label>
+                                <input type="number" value="2" id="desktopMaxLines">
+                            </div>
+                        </div>
+                        <div class="subsection">
+                            <h3>Mobile</h3>
+                            <div class="form-group">
+                                <label>Columns</label>
+                                <select id="mobileCols"><option>1</option><option selected>2</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rows</label>
+                                <select id="mobileRows"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+                            </div>
+                            <div class="two-col">
+                                <div class="form-group">
+                                    <label>Horizontal Spacing</label>
+                                    <input type="number" value="10" id="mobileHSpace">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vertical Spacing</label>
+                                    <input type="number" value="10" id="mobileVSpace">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Image Aspect Ratio</label>
+                                <select id="mobileAspect"><option>1:1</option><option>3:2</option><option selected>4:3</option><option>16:9</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Text Lines</label>
+                                <input type="number" value="2" id="mobileMaxLines">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Layout Activation Width</label>
+                                <input type="number" value="450" id="mobileBreakpoint">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Appearance Options</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label>Background color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(255,255,255,1)" id="bgColor">
+                                <input type="color" class="color-picker-native" data-color-for="bgColor" value="#ffffff" title="Pick color" aria-label="Widget background color" />
+                            </div>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Image Border Size</label>
+                                <input type="number" value="0" id="imgBorderSize">
+                            </div>
+                            <div class="form-group">
+                                <label>Image Border Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="text" value="rgba(0,0,0,1)" id="imgBorderColor">
+                                    <input type="color" class="color-picker-native" data-color-for="imgBorderColor" value="#000000" title="Pick color" aria-label="Image border color" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="zoomEffect">
+                                Zoom Effect on Hover
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Image Border Radius</label>
+                            <input type="number" value="10" id="imgBorderRadius">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Text Formatting</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label>Font Family</label>
+                            <select id="textFont">
+                                <option selected>Roboto, sans-serif</option>
+                                <option>Arial, sans-serif</option>
+                                <option>Georgia, serif</option>
+                                <option>Inter, sans-serif</option>
+                            </select>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Title Size (px)</label>
+                                <input type="number" value="14" id="titleSize">
+                            </div>
+                            <div class="form-group">
+                                <label>Description Size (px)</label>
+                                <input type="number" value="12" id="descSize">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Title Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(0,0,0,1)" id="titleColor">
+                                <input type="color" class="color-picker-native" data-color-for="titleColor" value="#000000" title="Pick color" aria-label="Title color" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Title Hover Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(0,0,0,1)" id="titleHoverColor">
+                                <input type="color" class="color-picker-native" data-color-for="titleHoverColor" value="#000000" title="Pick color" aria-label="Title hover color" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(102,102,102,1)" id="descColor">
+                                <input type="color" class="color-picker-native" data-color-for="descColor" value="#666666" title="Обрати колір" aria-label="Колір опису" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Text Alignment</label>
+                            <select id="textAlign"><option selected>Left</option><option>Center</option><option>Right</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="titleBold" checked>Title Bold</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="titleItalic">Title Italic</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Brand & logo</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <p class="small-hint">Brand name, logo, and CTA can be turned off independently. If both name and logo are off, the brand row is hidden.</p>
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="showBrandName" checked>Show brand name</label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="showLogo" checked>Show brand logo</label>
+                        </div>
+                        <div class="form-group">
+                            <label>Brand block position</label>
+                            <select id="brandPosition"><option>Above Title</option><option selected>Below Title</option><option>Next to CTA</option></select>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group"><label>Logo size (px)</label><input type="number" value="16" id="logoSize"></div>
+                            <div class="form-group"><label>Logo radius (%)</label><input type="number" value="50" id="logoRadius"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Brand name color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(136,136,136,1)" id="brandColor">
+                                <input type="color" class="color-picker-native" data-color-for="brandColor" value="#888888" title="Pick color" aria-label="Brand name color" />
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Brand name font size (px)</label><input type="number" value="11" id="brandSize"></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>CTA button</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="showCta" checked>Show CTA button</label>
+                        </div>
+                        <div class="form-group"><label>Button Style</label><select id="ctaStyle"><option selected>Filled</option><option>Outlined</option><option>Text Only</option></select></div>
+                        <div class="form-group">
+                            <label>Button Background</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(59,130,246,1)" id="ctaBg">
+                                <input type="color" class="color-picker-native" data-color-for="ctaBg" value="#3b82f6" title="Pick color" aria-label="Button background color" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Text Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(255,255,255,1)" id="ctaTextColor">
+                                <input type="color" class="color-picker-native" data-color-for="ctaTextColor" value="#ffffff" title="Обрати колір" aria-label="Колір тексту кнопки" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Hover Background</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(37,99,235,1)" id="ctaHoverBg">
+                                <input type="color" class="color-picker-native" data-color-for="ctaHoverBg" value="#2563eb" title="Обрати колір" aria-label="Колір кнопки при наведенні" />
+                            </div>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group"><label>Button Padding X (px)</label><input type="number" value="12" id="ctaPadX"></div>
+                            <div class="form-group"><label>Button Padding Y (px)</label><input type="number" value="6" id="ctaPadY"></div>
+                        </div>
+                        <div class="form-group"><label>Button Border Radius (px)</label><input type="number" value="10" id="ctaRadius"></div>
+                        <div class="form-group"><label>Button Position</label><select id="ctaPosition"><option selected>Right</option><option>Left</option><option>Below Text</option><option>Full Width</option></select></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Ads Label</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group"><label class="checkbox-label"><input type="checkbox" id="showLabel" checked>Show Label</label></div>
+                        <div class="form-group"><label>Label Text</label><input type="text" value="Ads" id="labelText"></div>
+                        <div class="form-group"><label>Label Font</label><select id="labelFont"><option selected>Roboto, sans-serif</option><option>Arial, sans-serif</option></select></div>
+                        <div class="form-group"><label>Label Size (px)</label><input type="number" value="10" id="labelSize"></div>
+                        <div class="form-group">
+                            <label>Label Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(153,153,153,1)" id="labelColor">
+                                <input type="color" class="color-picker-native" data-color-for="labelColor" value="#999999" title="Обрати колір" aria-label="Колір мітки Ads" />
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Label Position</label><select id="labelPosition"><option>Top Left</option><option selected>Top Right</option><option>Bottom Left</option><option>Bottom Right</option></select></div>
+                        <div class="form-group"><label class="checkbox-label"><input type="checkbox" id="labelBold">Bold</label></div>
+                        <div class="form-group"><label class="checkbox-label"><input type="checkbox" id="labelItalic">Italic</label></div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-save" onclick="saveSettings()">Save</button>
+                </div>
+            </div>
+
+            <div class="preview-column">
+                <div class="preview-card">
+                    <h3>Превʼю</h3>
+
+                    <div class="preview-device-toggle">
+                        <button class="active" onclick="setDevice('desktop')">🖥️ Desktop</button>
+                        <button onclick="setDevice('mobile')">📱 Mobile</button>
+                    </div>
+
+                    <div class="preview-viewport" id="previewViewport">
+                        <div class="native-widget" id="previewWidget">
+                            <div class="ad-label" id="previewLabel">Ads</div>
+                            <div class="native-grid" id="previewGrid" style="grid-template-columns: repeat(2, 1fr);"></div>
+                        </div>
+                    </div>
+
+                    <div class="preview-info">
+                        Widget selector on demo site: <code>[data-native-widget]</code><br>
+                        Breakpoint: <code id="infoBreakpoint">450px</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+      import { StorageKeys } from "../sdk/models.js";
+      import { ensureArray, migrateIfNeeded, readJson, writeJson, resetAll } from "../sdk/storage.js";
+
+      migrateIfNeeded();
+
+      const widgetSelect = document.getElementById("widgetSelect");
+      const widgetIdInput = document.getElementById("widgetId");
+      const widgetNameInput = document.getElementById("widgetName");
+      const widgetStatusInput = document.getElementById("widgetStatus");
+
+      function readWidgets() {
+        return ensureArray(readJson(StorageKeys.nativeWidgets, []));
+      }
+
+      function writeWidgets(list) {
+        writeJson(StorageKeys.nativeWidgets, list);
+      }
+
+      function upsertWidget(list, widget) {
+        const arr = ensureArray(list);
+        const idx = arr.findIndex((w) => w && String(w.id) === String(widget.id));
+        if (idx === -1) return [...arr, widget];
+        const copy = [...arr];
+        copy[idx] = widget;
+        return copy;
+      }
+
+      function refreshWidgetSelect() {
+        const widgets = readWidgets();
+        const curr = widgetSelect.value;
+        widgetSelect.innerHTML =
+          `<option value="">— Новий —</option>` +
+          widgets
+            .map((w) => `<option value="${String(w.id)}">${String(w.id)} — ${w.name || "Без назви"}</option>`)
+            .join("");
+        widgetSelect.value = curr;
+      }
+
+      function setPlacementMeta(widget) {
+        widgetSelect.value = widget ? String(widget.id) : "";
+        widgetIdInput.value = widget ? Number(widget.id) : Number(widgetIdInput.value || 112345678);
+        widgetNameInput.value = widget ? (widget.name || "") : (widgetNameInput.value || "");
+        widgetStatusInput.checked = widget ? Boolean(widget.status) : true;
+      }
+
+      function currentMeta() {
+        const id = Number(widgetIdInput.value);
+        return {
+          id: Number.isFinite(id) ? id : 112345678,
+          name: widgetNameInput.value.trim() || "Native widget",
+          status: widgetStatusInput.checked,
+        };
+      }
+
+      window.toggleSection = function (header) {
+        header.parentElement.classList.toggle('collapsed');
+      }
+
+      function parseColorToRgbaParts(str) {
+        const s = String(str || "").trim();
+        const rgba = s.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/i);
+        if (rgba) {
+          const a = rgba[4] != null ? Math.min(1, Math.max(0, parseFloat(rgba[4]))) : 1;
+          return {
+            r: Math.min(255, Math.max(0, parseInt(rgba[1], 10))),
+            g: Math.min(255, Math.max(0, parseInt(rgba[2], 10))),
+            b: Math.min(255, Math.max(0, parseInt(rgba[3], 10))),
+            a: Number.isFinite(a) ? a : 1,
+          };
+        }
+        const hex = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if (hex) {
+          let h = hex[1];
+          if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+          const n = parseInt(h, 16);
+          return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255, a: 1 };
+        }
+        return null;
+      }
+
+      function rgbaPartsToRgba(p) {
+        if (!p) return "rgba(0,0,0,1)";
+        const a = Number.isFinite(p.a) ? p.a : 1;
+        return `rgba(${p.r},${p.g},${p.b},${a})`;
+      }
+
+      function rgbaPartsToHex(p) {
+        if (!p) return "#000000";
+        const clamp = (x) => Math.min(255, Math.max(0, x | 0));
+        return (
+          "#" +
+          [clamp(p.r), clamp(p.g), clamp(p.b)]
+            .map((x) => x.toString(16).padStart(2, "0"))
+            .join("")
+        );
+      }
+
+      function syncColorPickersFromText() {
+        document.querySelectorAll("input.color-picker-native[data-color-for]").forEach((picker) => {
+          const id = picker.getAttribute("data-color-for");
+          const textEl = document.getElementById(id);
+          if (!textEl) return;
+          const parts = parseColorToRgbaParts(textEl.value);
+          picker.value = rgbaPartsToHex(parts || { r: 0, g: 0, b: 0, a: 1 });
+        });
+      }
+
+      function onColorPickerInput(ev) {
+        const picker = ev.target;
+        if (!picker.matches("input.color-picker-native[data-color-for]")) return;
+        const id = picker.getAttribute("data-color-for");
+        const textEl = document.getElementById(id);
+        if (!textEl) return;
+        const prev = parseColorToRgbaParts(textEl.value);
+        const a = prev && Number.isFinite(prev.a) ? prev.a : 1;
+        const rgb = parseColorToRgbaParts(picker.value);
+        textEl.value = rgbaPartsToRgba(rgb ? { ...rgb, a } : { r: 0, g: 0, b: 0, a });
+        updatePreview();
+      }
+
+      window.setDevice = function (device) {
+        const widget = document.getElementById('previewWidget');
+        const buttons = document.querySelectorAll('.preview-device-toggle button');
+        buttons.forEach(b => b.classList.remove('active'));
+        if (device === 'mobile') {
+          widget.classList.add('mobile');
+          buttons[1].classList.add('active');
+        } else {
+          widget.classList.remove('mobile');
+          buttons[0].classList.add('active');
+        }
+        updatePreview();
+      }
+
+      function renderPreviewItems(count) {
+        const grid = document.getElementById('previewGrid');
+        const itemMarkup = `
+          <div class="native-item">
+            <div class="thumb">Image</div>
+            <div class="content">
+              <div class="title">Your headline here</div>
+              <div class="brand">
+                <div class="brand-logo"></div>
+                <span class="brand-name">Brand</span>
+              </div>
+              <div class="desc">Description text goes here...</div>
+              <div class="footer">
+                <button class="cta" type="button">Learn More</button>
+              </div>
+            </div>
+          </div>
+        `;
+        grid.innerHTML = Array.from({ length: count }, () => itemMarkup).join('');
+      }
+
+      function applyBrandPosition(position) {
+        document.querySelectorAll('.native-item').forEach(item => {
+          const content = item.querySelector('.content');
+          const title = item.querySelector('.title');
+          const desc = item.querySelector('.desc');
+          const footer = item.querySelector('.footer');
+          const brand = item.querySelector('.brand');
+          if (!content || !title || !desc || !footer || !brand) return;
+          if (position === 'Above Title') content.insertBefore(brand, title);
+          else if (position === 'Below Title') content.insertBefore(brand, desc);
+          else footer.insertBefore(brand, footer.firstChild);
+        });
+      }
+
+      function updatePreview() {
+        const widget = document.getElementById('previewWidget');
+        const isMobile = widget.classList.contains('mobile');
+        const grid = document.getElementById('previewGrid');
+        const viewport = document.getElementById('previewViewport');
+        const bpRaw = Number(document.getElementById('mobileBreakpoint').value);
+        const bpPx = Number.isFinite(bpRaw) && bpRaw > 0 ? Math.min(Math.max(bpRaw, 280), 1200) : 450;
+        if (isMobile) {
+          viewport.classList.add('preview-viewport--mobile');
+          viewport.style.setProperty('--preview-mobile-bp', bpPx + 'px');
+        } else {
+          viewport.classList.remove('preview-viewport--mobile');
+          viewport.style.removeProperty('--preview-mobile-bp');
+        }
+
+        const cols = Number(document.getElementById(isMobile ? 'mobileCols' : 'desktopCols').value);
+        const rows = Number(document.getElementById(isMobile ? 'mobileRows' : 'desktopRows').value);
+        const hSpace = Number(document.getElementById(isMobile ? 'mobileHSpace' : 'desktopHSpace').value);
+        const vSpace = Number(document.getElementById(isMobile ? 'mobileVSpace' : 'desktopVSpace').value);
+        const aspect = document.getElementById(isMobile ? 'mobileAspect' : 'desktopAspect').value;
+        const maxLines = document.getElementById(isMobile ? 'mobileMaxLines' : 'desktopMaxLines').value;
+
+        const count = Math.max(cols * rows, 1);
+        renderPreviewItems(count);
+        widget.classList.toggle('compact', !isMobile && cols >= 3);
+        widget.classList.toggle('compact-dense', cols >= 4);
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        grid.style.columnGap = hSpace + 'px';
+        grid.style.rowGap = vSpace + 'px';
+        grid.style.padding = vSpace + 'px ' + hSpace + 'px';
+
+        const bgColor = document.getElementById('bgColor').value;
+        const imgBorderRadius = document.getElementById('imgBorderRadius').value;
+        const imgBorderSize = document.getElementById('imgBorderSize').value;
+        const imgBorderColor = document.getElementById('imgBorderColor').value;
+        const zoomEffect = document.getElementById('zoomEffect').checked;
+        const fixedSize = document.getElementById('fixedSize').checked;
+        widget.style.background = bgColor;
+        widget.style.width = fixedSize ? document.getElementById('widgetWidth').value + 'px' : '';
+        widget.style.height = fixedSize ? document.getElementById('widgetHeight').value + 'px' : '';
+        widget.style.overflow = fixedSize ? 'auto' : '';
+
+        document.querySelectorAll('.native-item .thumb').forEach(el => {
+          el.style.borderRadius = imgBorderRadius + 'px';
+          el.style.border = imgBorderSize + 'px solid ' + imgBorderColor;
+          el.style.aspectRatio = aspect.replace(':', ' / ');
+          el.style.height = 'auto';
+        });
+        document.querySelectorAll('.native-item').forEach(el => { el.classList.toggle('zoom-enabled', zoomEffect); });
+
+        const labelText = document.getElementById('labelText').value;
+        const labelColor = document.getElementById('labelColor').value;
+        const labelSize = document.getElementById('labelSize').value;
+        const labelFont = document.getElementById('labelFont').value;
+        const labelPosition = document.getElementById('labelPosition').value;
+        const labelBold = document.getElementById('labelBold').checked;
+        const labelItalic = document.getElementById('labelItalic').checked;
+        const showLabel = document.getElementById('showLabel').checked;
+        const label = document.getElementById('previewLabel');
+        label.textContent = labelText;
+        label.style.color = labelColor;
+        label.style.fontSize = labelSize + 'px';
+        label.style.fontFamily = labelFont;
+        label.style.fontWeight = labelBold ? '700' : '400';
+        label.style.fontStyle = labelItalic ? 'italic' : 'normal';
+        label.style.textAlign = labelPosition.includes('Left') ? 'left' : 'right';
+        label.style.order = labelPosition.includes('Bottom') ? '2' : '0';
+        label.style.display = showLabel ? 'block' : 'none';
+        grid.style.order = labelPosition.includes('Bottom') ? '1' : '2';
+
+        const textFont = document.getElementById('textFont').value;
+        const titleSize = document.getElementById('titleSize').value;
+        const descSize = document.getElementById('descSize').value;
+        const titleColor = document.getElementById('titleColor').value;
+        const titleHoverColor = document.getElementById('titleHoverColor').value;
+        const descColor = document.getElementById('descColor').value;
+        const textAlign = document.getElementById('textAlign').value;
+        const titleBold = document.getElementById('titleBold').checked;
+        const titleItalic = document.getElementById('titleItalic').checked;
+        widget.style.fontFamily = textFont;
+        widget.style.setProperty('--title-hover-color', titleHoverColor);
+
+        document.querySelectorAll('.native-item .title').forEach(el => {
+          el.style.fontSize = titleSize + 'px';
+          el.style.color = titleColor;
+          el.style.textAlign = textAlign;
+          el.style.fontWeight = titleBold ? '900' : '400';
+          el.style.fontStyle = titleItalic ? 'italic' : 'normal';
+          el.style.display = '-webkit-box';
+          el.style.webkitLineClamp = maxLines;
+          el.style.webkitBoxOrient = 'vertical';
+          el.style.overflow = 'hidden';
+        });
+        document.querySelectorAll('.native-item .desc').forEach(el => {
+          el.style.fontSize = descSize + 'px';
+          el.style.color = descColor;
+          el.style.textAlign = textAlign;
+          el.style.display = '-webkit-box';
+          el.style.webkitLineClamp = maxLines;
+          el.style.webkitBoxOrient = 'vertical';
+          el.style.overflow = 'hidden';
+        });
+
+        const showBrandName = document.getElementById('showBrandName').checked;
+        const showLogo = document.getElementById('showLogo').checked;
+        const brandRowVisible = showBrandName || showLogo;
+        const brandColor = document.getElementById('brandColor').value;
+        const brandSize = document.getElementById('brandSize').value;
+        const brandPosition = document.getElementById('brandPosition').value;
+        const logoSize = document.getElementById('logoSize').value;
+        const logoRadius = document.getElementById('logoRadius').value;
+
+        applyBrandPosition(brandPosition);
+        document.querySelectorAll('.native-item .brand').forEach(el => { el.style.display = brandRowVisible ? 'flex' : 'none'; });
+        document.querySelectorAll('.native-item .brand-logo').forEach(el => {
+          el.style.display = showLogo ? 'flex' : 'none';
+          el.style.width = logoSize + 'px';
+          el.style.height = logoSize + 'px';
+          el.style.borderRadius = logoRadius + '%';
+        });
+        document.querySelectorAll('.native-item .brand-name').forEach(el => {
+          el.style.display = showBrandName ? 'inline' : 'none';
+          el.style.color = brandColor;
+          el.style.fontSize = brandSize + 'px';
+        });
+
+        const showCta = document.getElementById('showCta').checked;
+        const ctaBg = document.getElementById('ctaBg').value;
+        const ctaTextColor = document.getElementById('ctaTextColor').value;
+        const ctaHoverBg = document.getElementById('ctaHoverBg').value;
+        const ctaStyle = document.getElementById('ctaStyle').value;
+        const ctaRadius = document.getElementById('ctaRadius').value;
+        const ctaPadX = document.getElementById('ctaPadX').value;
+        const ctaPadY = document.getElementById('ctaPadY').value;
+        const ctaPosition = document.getElementById('ctaPosition').value;
+        widget.style.setProperty('--cta-hover-bg', ctaHoverBg);
+
+        document.querySelectorAll('.native-item .cta').forEach(el => {
+          el.style.display = showCta ? 'block' : 'none';
+          el.style.background = ctaStyle === 'Filled' ? ctaBg : 'transparent';
+          el.style.color = ctaStyle === 'Filled' ? ctaTextColor : ctaBg;
+          el.style.border = ctaStyle === 'Outlined' ? `1px solid ${ctaBg}` : 'none';
+          el.style.borderRadius = ctaRadius + 'px';
+          el.style.padding = ctaPadY + 'px ' + ctaPadX + 'px';
+          el.style.width = ctaPosition === 'Full Width' ? '100%' : '';
+        });
+        document.querySelectorAll('.native-item .footer').forEach(el => {
+          const col = ctaPosition === 'Below Text' || ctaPosition === 'Full Width';
+          el.style.flexDirection = col ? 'column' : 'row';
+          el.style.alignItems = ctaPosition === 'Right' || ctaPosition === 'Left' ? 'center' : 'stretch';
+          el.style.justifyContent = col ? '' : ctaPosition === 'Left' ? 'flex-start' : 'flex-end';
+        });
+        document.querySelectorAll('.native-item').forEach(item => {
+          const footer = item.querySelector('.footer');
+          const brand = item.querySelector('.brand');
+          if (!footer) return;
+          const brandInFooter = brand && footer.contains(brand);
+          const showFooter = showCta || (brandInFooter && brandRowVisible);
+          footer.style.display = showFooter ? '' : 'none';
+        });
+
+        document.getElementById('infoBreakpoint').textContent = document.getElementById('mobileBreakpoint').value + 'px';
+
+        syncColorPickersFromText();
+      }
+
+      window.saveSettings = function () {
+        const settings = {
+          layout: {
+            fixedSize: document.getElementById('fixedSize').checked,
+            width: document.getElementById('widgetWidth').value,
+            height: document.getElementById('widgetHeight').value,
+            desktop: {
+              cols: document.getElementById('desktopCols').value,
+              rows: document.getElementById('desktopRows').value,
+              hSpace: document.getElementById('desktopHSpace').value,
+              vSpace: document.getElementById('desktopVSpace').value,
+              aspect: document.getElementById('desktopAspect').value,
+              maxLines: document.getElementById('desktopMaxLines').value
+            },
+            mobile: {
+              cols: document.getElementById('mobileCols').value,
+              rows: document.getElementById('mobileRows').value,
+              hSpace: document.getElementById('mobileHSpace').value,
+              vSpace: document.getElementById('mobileVSpace').value,
+              aspect: document.getElementById('mobileAspect').value,
+              maxLines: document.getElementById('mobileMaxLines').value,
+              breakpoint: document.getElementById('mobileBreakpoint').value
+            }
+          },
+          appearance: {
+            bgColor: document.getElementById('bgColor').value,
+            imgBorderSize: document.getElementById('imgBorderSize').value,
+            imgBorderColor: document.getElementById('imgBorderColor').value,
+            imgBorderRadius: document.getElementById('imgBorderRadius').value,
+            zoomEffect: document.getElementById('zoomEffect').checked
+          },
+          text: {
+            font: document.getElementById('textFont').value,
+            titleSize: document.getElementById('titleSize').value,
+            descSize: document.getElementById('descSize').value,
+            titleColor: document.getElementById('titleColor').value,
+            titleHoverColor: document.getElementById('titleHoverColor').value,
+            descColor: document.getElementById('descColor').value,
+            align: document.getElementById('textAlign').value,
+            titleBold: document.getElementById('titleBold').checked,
+            titleItalic: document.getElementById('titleItalic').checked
+          },
+          brand: {
+            showBrandName: document.getElementById('showBrandName').checked,
+            showBrand: document.getElementById('showBrandName').checked,
+            showLogo: document.getElementById('showLogo').checked,
+            position: document.getElementById('brandPosition').value,
+            logoSize: document.getElementById('logoSize').value,
+            logoRadius: document.getElementById('logoRadius').value,
+            color: document.getElementById('brandColor').value,
+            size: document.getElementById('brandSize').value
+          },
+          cta: {
+            showCta: document.getElementById('showCta').checked,
+            style: document.getElementById('ctaStyle').value,
+            bg: document.getElementById('ctaBg').value,
+            textColor: document.getElementById('ctaTextColor').value,
+            hoverBg: document.getElementById('ctaHoverBg').value,
+            padX: document.getElementById('ctaPadX').value,
+            padY: document.getElementById('ctaPadY').value,
+            radius: document.getElementById('ctaRadius').value,
+            position: document.getElementById('ctaPosition').value
+          },
+          label: {
+            show: document.getElementById('showLabel').checked,
+            text: document.getElementById('labelText').value,
+            font: document.getElementById('labelFont').value,
+            size: document.getElementById('labelSize').value,
+            color: document.getElementById('labelColor').value,
+            position: document.getElementById('labelPosition').value,
+            bold: document.getElementById('labelBold').checked,
+            italic: document.getElementById('labelItalic').checked
+          }
+        };
+        const meta = currentMeta();
+        const widget = { ...meta, settings };
+        const next = upsertWidget(readWidgets(), widget);
+        writeWidgets(next);
+        // Back-compat (optional): keep last-saved in legacy key
+        writeJson(StorageKeys.nativeWidgetSettings, settings);
+        refreshWidgetSelect();
+        widgetSelect.value = String(meta.id);
+        alert('Native-інвентар збережено (плейсмент + налаштування).');
+      }
+
+      function applySettingsToForm(settings) {
+        if (!settings) return;
+        // Layout
+        document.getElementById('fixedSize').checked = Boolean(settings.layout?.fixedSize);
+        document.getElementById('widgetWidth').value = settings.layout?.width ?? 250;
+        document.getElementById('widgetHeight').value = settings.layout?.height ?? 200;
+        document.getElementById('desktopCols').value = settings.layout?.desktop?.cols ?? "4";
+        document.getElementById('desktopRows').value = settings.layout?.desktop?.rows ?? "1";
+        document.getElementById('desktopHSpace').value = settings.layout?.desktop?.hSpace ?? "10";
+        document.getElementById('desktopVSpace').value = settings.layout?.desktop?.vSpace ?? "10";
+        document.getElementById('desktopAspect').value = settings.layout?.desktop?.aspect ?? "3:2";
+        document.getElementById('desktopMaxLines').value = settings.layout?.desktop?.maxLines ?? "2";
+        document.getElementById('mobileCols').value = settings.layout?.mobile?.cols ?? "2";
+        document.getElementById('mobileRows').value = settings.layout?.mobile?.rows ?? "2";
+        document.getElementById('mobileHSpace').value = settings.layout?.mobile?.hSpace ?? "10";
+        document.getElementById('mobileVSpace').value = settings.layout?.mobile?.vSpace ?? "10";
+        document.getElementById('mobileAspect').value = settings.layout?.mobile?.aspect ?? "4:3";
+        document.getElementById('mobileMaxLines').value = settings.layout?.mobile?.maxLines ?? "2";
+        document.getElementById('mobileBreakpoint').value = settings.layout?.mobile?.breakpoint ?? "450";
+
+        // Appearance
+        document.getElementById('bgColor').value = settings.appearance?.bgColor ?? "rgba(255,255,255,1)";
+        document.getElementById('imgBorderSize').value = settings.appearance?.imgBorderSize ?? "0";
+        document.getElementById('imgBorderColor').value = settings.appearance?.imgBorderColor ?? "rgba(0,0,0,1)";
+        document.getElementById('imgBorderRadius').value = settings.appearance?.imgBorderRadius ?? "10";
+        document.getElementById('zoomEffect').checked = Boolean(settings.appearance?.zoomEffect);
+
+        // Text
+        document.getElementById('textFont').value = settings.text?.font ?? "Roboto, sans-serif";
+        document.getElementById('titleSize').value = settings.text?.titleSize ?? "14";
+        document.getElementById('descSize').value = settings.text?.descSize ?? "12";
+        document.getElementById('titleColor').value = settings.text?.titleColor ?? "rgba(0,0,0,1)";
+        document.getElementById('titleHoverColor').value = settings.text?.titleHoverColor ?? "rgba(0,0,0,1)";
+        document.getElementById('descColor').value = settings.text?.descColor ?? "rgba(102,102,102,1)";
+        document.getElementById('textAlign').value = settings.text?.align ?? "Left";
+        document.getElementById('titleBold').checked = Boolean(settings.text?.titleBold ?? true);
+        document.getElementById('titleItalic').checked = Boolean(settings.text?.titleItalic);
+
+        // Brand (legacy: only showBrand, false → увесь рядок бренду вимкнено)
+        document.getElementById('showBrandName').checked = Boolean(settings.brand?.showBrandName ?? settings.brand?.showBrand ?? true);
+        {
+          const hasExplicitBrandName = settings.brand != null && Object.prototype.hasOwnProperty.call(settings.brand, "showBrandName");
+          let logoOn = Boolean(settings.brand?.showLogo ?? true);
+          if (!hasExplicitBrandName && settings.brand?.showBrand === false) logoOn = false;
+          document.getElementById('showLogo').checked = logoOn;
+        }
+        document.getElementById('brandPosition').value = settings.brand?.position ?? "Below Title";
+        document.getElementById('logoSize').value = settings.brand?.logoSize ?? "16";
+        document.getElementById('logoRadius').value = settings.brand?.logoRadius ?? "50";
+        document.getElementById('brandColor').value = settings.brand?.color ?? "rgba(136,136,136,1)";
+        document.getElementById('brandSize').value = settings.brand?.size ?? "11";
+
+        // CTA
+        document.getElementById('showCta').checked = Boolean(settings.cta?.showCta ?? true);
+        document.getElementById('ctaStyle').value = settings.cta?.style ?? "Filled";
+        document.getElementById('ctaBg').value = settings.cta?.bg ?? "rgba(59,130,246,1)";
+        document.getElementById('ctaTextColor').value = settings.cta?.textColor ?? "rgba(255,255,255,1)";
+        document.getElementById('ctaHoverBg').value = settings.cta?.hoverBg ?? "rgba(37,99,235,1)";
+        document.getElementById('ctaPadX').value = settings.cta?.padX ?? "12";
+        document.getElementById('ctaPadY').value = settings.cta?.padY ?? "6";
+        document.getElementById('ctaRadius').value = settings.cta?.radius ?? "10";
+        document.getElementById('ctaPosition').value = settings.cta?.position ?? "Right";
+
+        // Label
+        document.getElementById('showLabel').checked = Boolean(settings.label?.show ?? true);
+        document.getElementById('labelText').value = settings.label?.text ?? "Ads";
+        document.getElementById('labelFont').value = settings.label?.font ?? "Roboto, sans-serif";
+        document.getElementById('labelSize').value = settings.label?.size ?? "10";
+        document.getElementById('labelColor').value = settings.label?.color ?? "rgba(153,153,153,1)";
+        document.getElementById('labelPosition').value = settings.label?.position ?? "Top Right";
+        document.getElementById('labelBold').checked = Boolean(settings.label?.bold);
+        document.getElementById('labelItalic').checked = Boolean(settings.label?.italic);
+
+        syncColorPickersFromText();
+      }
+
+      function loadSaved() {
+        const widgets = readWidgets();
+        refreshWidgetSelect();
+        if (!widgets.length) {
+          const legacy = readJson(StorageKeys.nativeWidgetSettings, null);
+          if (legacy) {
+            applySettingsToForm(legacy);
+            setPlacementMeta({ id: Number(widgetIdInput.value || 112345678), name: widgetNameInput.value, status: widgetStatusInput.checked });
+            updatePreview();
+            return alert("Завантажено legacy-настройки (один віджет).");
+          }
+          return alert("Немає збережених native-віджетів.");
+        }
+        const id = widgetSelect.value || String(widgets[0].id);
+        const widget = widgets.find((w) => String(w.id) === String(id)) || widgets[0];
+        setPlacementMeta(widget);
+        applySettingsToForm(widget.settings);
+        updatePreview();
+        alert("Віджет завантажено зі сховища.");
+      }
+
+      document.getElementById("loadBtn").addEventListener("click", loadSaved);
+      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); refreshWidgetSelect(); alert("Сховище очищено."); });
+
+      widgetSelect.addEventListener("change", () => {
+        const widgets = readWidgets();
+        const id = widgetSelect.value;
+        if (!id) return;
+        const widget = widgets.find((w) => String(w.id) === String(id));
+        if (!widget) return;
+        setPlacementMeta(widget);
+        applySettingsToForm(widget.settings);
+        updatePreview();
+      });
+
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.classList.contains('color-picker-native')) return;
+        el.addEventListener('input', updatePreview);
+        el.addEventListener('change', updatePreview);
+      });
+
+      document.querySelectorAll('input.color-picker-native[data-color-for]').forEach((picker) => {
+        picker.addEventListener('input', onColorPickerInput);
+        picker.addEventListener('change', onColorPickerInput);
+      });
+
+      renderPreviewItems(4);
+      refreshWidgetSelect();
+      updatePreview();
+    </script>
+</body>
+</html>
+

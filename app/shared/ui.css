@@ -1,0 +1,118 @@
+:root{
+  --green-900:#064e3b;
+  --green-800:#065f46;
+  --green-700:#047857;
+  --green-600:#059669;
+  --green-100:#d1fae5;
+  --bg:#f5f5f5;
+  --card:#ffffff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --muted:#6b7280;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.uiWrap{ max-width:1400px; margin:0 auto; padding:18px; }
+.uiTopbar{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px;
+}
+.uiTopbar h1{ margin:0; font-size:16px; font-weight:900; }
+.uiSub{ font-size:12px; color:var(--muted); margin-top:4px; }
+.uiLink{ color:var(--green-700); font-weight:900; text-decoration:none; }
+
+.uiActions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.uiBtn{
+  border:1px solid var(--border); background:#fff; border-radius:10px; padding:8px 12px;
+  cursor:pointer; font-weight:900; font-size:13px; color:var(--text);
+}
+.uiBtnPrimary{ background:var(--green-700); border-color:var(--green-700); color:#fff; }
+
+.uiPill{
+  display:inline-flex; gap:6px; padding:6px; border:1px solid var(--border); border-radius:999px; background:#fafafa;
+}
+.uiPill button{
+  border:0; background:transparent; padding:6px 10px; border-radius:999px; cursor:pointer; font-weight:900; font-size:13px;
+  color:#374151;
+}
+.uiPill button.active{ background:var(--green-700); color:#fff; }
+
+.uiTabs{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+}
+.uiTab{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 12px; border-radius:999px; border:1px solid var(--border);
+  background:#fafafa; color:var(--text); text-decoration:none; font-weight:900; font-size:13px;
+}
+.uiTab.active{ background:var(--green-100); border-color:var(--green-600); color:var(--green-900); }
+
+/* Глобальна навігація між усіма сторінками стенду */
+.uiAppNav{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+  margin-bottom:12px;
+  padding:10px 12px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+.uiAppNav .uiAppNav-label{
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--muted);
+  margin-right:6px;
+}
+.uiAppNav a{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#fafafa;
+  color:var(--text);
+  text-decoration:none;
+  font-weight:800;
+  font-size:12px;
+  white-space:nowrap;
+}
+.uiAppNav a:hover{
+  background:var(--green-100);
+  border-color:var(--green-600);
+  color:var(--green-900);
+}
+.uiAppNav a.active{
+  background:var(--green-700);
+  border-color:var(--green-700);
+  color:#fff;
+}
+
+.uiCard{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+}
+
+.uiLabel{ font-size:13px; color:#374151; font-weight:900; display:block; margin:0 0 6px; }
+.uiInput,.uiSelect,.uiTextarea{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:14px;
+}
+.uiTextarea{ min-height:120px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
+.uiHint{ font-size:12px; color:var(--muted); margin-top:6px; line-height:1.35; }
+

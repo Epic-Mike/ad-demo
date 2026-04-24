@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ad Diagnostic Sandbox</title>
+    <link rel="stylesheet" href="./shared/ui.css" />
+    <style>
+      .grid {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+      .links { display: grid; gap: 8px; }
+      a.link {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px;
+        text-decoration: none; color: var(--text); background: #fafafa; font-weight: 900;
+      }
+      a.link:hover { background: var(--green-100); border-color: var(--green-600); }
+      .hint { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+    </style>
+  </head>
+  <body>
+    <div class="uiWrap">
+      <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
+        <span class="uiAppNav-label">Pages</span>
+        <a class="active" href="./index.html">Home</a>
+        <a href="./advertiser/banner.html">Banner Adv</a>
+        <a href="./advertiser/native.html">Native Adv</a>
+        <a href="./publisher/banner.html">Banner Web</a>
+        <a href="./publisher/native.html">Native Web</a>
+        <a href="./demo/site.html">Demo site</a>
+      </nav>
+      <div class="uiTopbar">
+        <div>
+          <h1>Ad diagnostic sandbox</h1>
+          <div class="uiSub">Advertiser → Publisher (Banner + Native)</div>
+        </div>
+        <div class="uiActions">
+          <button id="seedBtn" class="uiBtn uiBtnPrimary" type="button">Seed demo data</button>
+          <button id="resetBtn" class="uiBtn" type="button">Reset (clear LocalStorage)</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="uiCard">
+          <h2 style="margin:0 0 10px;font-size:14px;color:#374151;">Advertiser</h2>
+          <div class="links">
+            <a class="link" href="./advertiser/banner.html" target="_blank" rel="noreferrer"><span>Banner Adv — creatives</span><span>↗</span></a>
+            <a class="link" href="./advertiser/native.html" target="_blank" rel="noreferrer"><span>Native Adv — creatives</span><span>↗</span></a>
+          </div>
+          <div class="hint">
+            Build creatives here. After Save they are stored in LocalStorage and available for rendering.
+          </div>
+        </div>
+
+        <div class="uiCard">
+          <h2 style="margin:0 0 10px;font-size:14px;color:#374151;">Publisher</h2>
+          <div class="links">
+            <a class="link" href="./publisher/banner.html" target="_blank" rel="noreferrer"><span>Banner Web — placements</span><span>↗</span></a>
+            <a class="link" href="./publisher/native.html" target="_blank" rel="noreferrer"><span>Native Web — widgets</span><span>↗</span></a>
+          </div>
+          <div class="hint">
+            Configure inventory (placements/widgets). The virtual site uses these settings when rendering.
+          </div>
+        </div>
+
+        <div class="uiCard" style="grid-column: 1 / -1;">
+          <h2 style="margin:0 0 10px;font-size:14px;color:#374151;">Virtual website</h2>
+          <div class="links">
+            <a class="link" href="./demo/site.html" target="_blank" rel="noreferrer"><span>Open (desktop/mobile + inspector)</span><span>↗</span></a>
+          </div>
+          <div class="hint">
+            Renders ads from storage: banners in <code>data-banner-id</code>, native widgets in <code>data-native-widget</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { StorageKeys, nowIso, uuid } from "./sdk/models.js";
+      import { readJson, writeJson, resetAll, cloneJson } from "./sdk/storage.js";
+      import {
+        DEMO_NATIVE_WIDGET_SPECS,
+        defaultNativeWidgetSettings,
+        nativeGrid3SettingsFrom,
+      } from "./sdk/native-demo-defaults.js";
+
+      function seed() {
+        // Banner creatives
+        const bannerCreatives = [
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "simple",
+            size: "300x250",
+            assets: { imageDataUrl: null },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "728x90",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:700 18px system-ui;background:#111827;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">Selfcode 728x90</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "320x50",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 13px system-ui;background:#0f766e;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">Mobile 320×50</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "468x60",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 14px system-ui;background:#7c3aed;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">468×60</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "160x600",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:700 15px system-ui;writing-mode:vertical-rl;text-orientation:mixed;background:#0369a1;color:white;text-decoration:none;padding:8px}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">160×600</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "970x250",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:900 22px system-ui;background:#14532d;color:#ecfccb;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">970×250</a></body></html>`,
+            },
+          },
+        ];
+        writeJson(StorageKeys.bannerCreatives, bannerCreatives);
+
+        // Banner spots (match demo slots)
+        const bannerSpots = [
+          {
+            id: 726435,
+            name: "Top Leaderboard",
+            size: "728x90",
+            status: true,
+            mode: "",
+            flexSizes: {
+              desktop: ["728x90", "970x250"],
+              mobile: ["320x50", "300x250"],
+              breakpoint: 600,
+            },
+          },
+          { id: 726436, name: "Inline Rect", size: "300x250", status: true, mode: "" },
+          { id: 726437, name: "Sidebar", size: "300x250", status: true, mode: "" },
+          { id: 726438, name: "In-article strip", size: "468x60", status: true, mode: "" },
+          { id: 726439, name: "Mid article LDB", size: "728x90", status: true, mode: "" },
+          { id: 726440, name: "Rail skyscraper", size: "160x600", status: true, mode: "" },
+          {
+            id: 726441,
+            name: "Article mega",
+            size: "970x250",
+            status: true,
+            mode: "",
+            flexSizes: {
+              desktop: ["970x250", "728x90"],
+              mobile: ["300x250", "320x50"],
+              breakpoint: 600,
+            },
+          },
+        ];
+        writeJson(StorageKeys.bannerSpots, bannerSpots);
+
+        const nativeCreatives = [
+          {
+            id: "native-" + uuid(),
+            createdAt: nowIso(),
+            title: "Summer sale: up to 50% off",
+            description: "Limited time offer. Browse deals and save on bestsellers.",
+            ctaText: "Learn More",
+            brandName: "Brand",
+            assets: { mainImageDataUrl: null, logoDataUrl: null },
+          },
+          {
+            id: "native-" + uuid(),
+            createdAt: nowIso(),
+            title: "Weekend reads bundle",
+            description: "Editors pick long-form reporting and analysis you may have missed.",
+            ctaText: "Browse",
+            brandName: "Times Books",
+            assets: { mainImageDataUrl: null, logoDataUrl: null },
+          },
+          {
+            id: "native-" + uuid(),
+            createdAt: nowIso(),
+            title: "Member perks · audio edition",
+            description: "Listen to articles offline. New narrations every weekday morning.",
+            ctaText: "Try free",
+            brandName: "Times Audio",
+            assets: { mainImageDataUrl: null, logoDataUrl: null },
+          },
+        ];
+        writeJson(StorageKeys.nativeCreatives, nativeCreatives);
+
+        const settings = readJson(StorageKeys.nativeWidgetSettings, null) || defaultNativeWidgetSettings();
+        const grid3Settings = nativeGrid3SettingsFrom(settings);
+        writeJson(
+          StorageKeys.nativeWidgets,
+          DEMO_NATIVE_WIDGET_SPECS.map((spec) => ({
+            id: spec.id,
+            name: spec.name,
+            status: true,
+            settings: cloneJson(spec.grid3 ? grid3Settings : settings),
+          })),
+        );
+        writeJson(StorageKeys.nativeWidgetSettings, cloneJson(settings));
+
+        alert("Demo data saved. Open the virtual website.");
+      }
+
+      document.getElementById("seedBtn").addEventListener("click", seed);
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        resetAll();
+        alert("LocalStorage cleared.");
+      });
+    </script>
+  </body>
+</html>
+

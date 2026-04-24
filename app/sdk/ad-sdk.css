@@ -1,0 +1,218 @@
+.adDiag-slotEmpty {
+  font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px dashed #f59e0b;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.adDiag-bannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: #fff;
+}
+
+.adDiag-bannerFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+/* Safety: never overflow parent containers */
+[data-banner-id]{
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Демо: id плейсмента при успішному рендері креативу */
+.adDiag-placementIdBadge {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  z-index: 3;
+  font: 10px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-weight: 600;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 2px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.adDiag-html5Stub {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font: 12px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #0f172a;
+  background: #e2e8f0;
+  border-radius: 6px;
+}
+
+/* Native widget */
+.adDiag-nativeWidget {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.adDiag-label {
+  font-size: 10px;
+  color: #999;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  text-align: right;
+  letter-spacing: 0.03em;
+}
+
+.adDiag-grid {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.adDiag-nativeItem {
+  display: flex;
+  gap: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  min-width: 0;
+}
+
+.adDiag-nativeItem:hover {
+  opacity: 0.9;
+}
+
+.adDiag-nativeItem:hover .adDiag-title {
+  color: var(--adDiagTitleHoverColor, inherit) !important;
+}
+
+.adDiag-thumb {
+  width: 120px;
+  height: auto;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.adDiag-zoomEnabled:hover .adDiag-thumb {
+  transform: scale(1.03);
+}
+
+.adDiag-thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.adDiag-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.adDiag-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.adDiag-desc {
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.adDiag-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.adDiag-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #888;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+
+.adDiag-brandLogo {
+  width: 16px;
+  height: 16px;
+  background: #ddd;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.adDiag-brandLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.adDiag-brandName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adDiag-cta {
+  background: #3b82f6;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.adDiag-cta:hover {
+  background: var(--adDiagCtaHoverBg, #2563eb) !important;
+}
+
+/* Mobile visual tweak (layout itself comes from settings) */
+.adDiag-nativeWidget.adDiag-mobile .adDiag-nativeItem {
+  flex-direction: column;
+}
+
+.adDiag-nativeWidget.adDiag-mobile .adDiag-thumb {
+  width: 100%;
+}
+

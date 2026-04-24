@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Паблішер — Banner плейсменти</title>
+    <link rel="stylesheet" href="../shared/ui.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 18px; }
+        .page { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; min-height: 500px; }
+        .page.hidden { display: none; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .topbar h1 { font-size: 16px; font-weight: 900; color: #111827; }
+        .topbar a { color: var(--green-700); font-weight: 900; text-decoration: none; }
+        .btnRow { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .btnTop {
+          border: 1px solid #d1d5db; background: #fff; color: #111827;
+          border-radius: 10px; padding: 8px 12px; font-weight: 800; font-size: 13px; cursor: pointer;
+        }
+        .btnTop.primary { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+        .format-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .format-tab { min-width: 104px; padding: 5px 18px; border: 1px solid #aaa; background: #f7f7f7; color: #555; font-size: 13px; line-height: 1; text-align: center; cursor: default; border-radius: 999px; }
+        .format-tab.active { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+        .panel { border: 1px solid #cfcfcf; border-radius: 10px; padding: 18px; min-height: 430px; }
+        .panel-toolbar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+        .btn { border: 0; border-radius: 10px; padding: 8px 16px; font-size: 14px; font-weight: 900; cursor: pointer; color: #fff; background: var(--green-700); }
+        .btn:hover { background: #208e42; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+        th, td { border: 1px solid #999; padding: 6px 8px; text-align: center; vertical-align: middle; }
+        th { font-weight: 800; color: #374151; background: #fbfbfb; }
+        .col-id { width: 10%; }
+        .col-name { width: 18%; }
+        .col-size { width: 14%; }
+        .col-status { width: 12%; }
+        .col-code { width: 46%; }
+        .col-actions { width: 10%; }
+        .code-cell { display: grid; grid-template-columns: minmax(120px, 1fr) auto; gap: 8px; align-items: center; }
+        .code-input { width: 100%; height: 28px; border: 1px solid #c8c8c8; border-radius: 8px; padding: 3px 8px; color: #777; font-size: 12px; text-align: center; background: #fff; }
+        .copy-btn { border: 0; background: transparent; color: #15aa8b; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+        .icon-btn { width: 28px; height: 28px; border: 1px solid #e5e7eb; background: #fff; border-radius: 8px; cursor: pointer; color: #111; font-size: 14px; line-height: 28px; }
+        .icon-btn:hover { border-color: #27a84f; color: #27a84f; }
+        .switch { position: relative; display: inline-block; width: 31px; height: 14px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; cursor: pointer; background: #d9d9d9; border-radius: 20px; transition: 0.2s; }
+        .slider::before { content: ""; position: absolute; width: 12px; height: 12px; left: 1px; top: 1px; background: #fff; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.25); transition: 0.2s; }
+        .switch input:checked + .slider { background: #239277; }
+        .switch input:checked + .slider::before { transform: translateX(17px); }
+        .form-title { margin-bottom: 16px; }
+        .form-title h1 { font-size: 18px; font-weight: 800; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; color: #374151; font-weight: 700; }
+        input[type="text"], select { width: 100%; height: 34px; border: 1px solid #cfcfcf; border-radius: 10px; padding: 4px 10px; font-size: 13px; color: #111827; background: #fff; }
+        .radio-row { display: flex; align-items: center; gap: 6px; color: #555; font-size: 13px; }
+        .radio-row input { width: 13px; height: 13px; accent-color: #239277; }
+        .form-actions { display: flex; align-items: center; gap: 10px; margin-top: 24px; }
+        .btn.secondary { background: #f5f5f5; color: #555; border: 1px solid #bbb; }
+        .btn.secondary:hover { background: #ebebeb; }
+        .save-list { margin-top: 12px; }
+        /* Мультиселект розмірів (теги + dropdown) */
+        .flex-ms-label-row {
+          display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;
+        }
+        .flex-ms-label-row label { margin-bottom: 0; font-size: 12px; }
+        .flex-ms-clear {
+          border: 0; background: none; padding: 0; font-size: 11px; font-weight: 800; color: var(--green-700, #239277);
+          cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+        }
+        .flex-ms-clear:hover { color: #1a6b5c; }
+        #flexFields > .form-group { margin-bottom: 10px; }
+        .flex-ms { position: relative; margin-bottom: 0; }
+        .flex-ms-box {
+          display: flex; align-items: center; flex-wrap: wrap; gap: 4px; min-height: 30px;
+          padding: 3px 26px 3px 6px; border: 1px solid #cfcfcf; border-radius: 8px; background: #fff;
+          cursor: pointer; position: relative;
+        }
+        .flex-ms-box:hover { border-color: #9ca3af; }
+        .flex-ms-box.open { border-color: var(--green-700, #239277); box-shadow: 0 0 0 2px rgba(35, 146, 119, 0.15); }
+        .flex-ms-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 1; min-width: 0; }
+        .flex-ms-placeholder {
+          font-size: 12px; color: #9ca3af; padding: 2px 0; pointer-events: none; user-select: none;
+        }
+        .flex-ms-caret {
+          position: absolute; right: 7px; top: 50%; transform: translateY(-50%); font-size: 9px; color: #6b7280;
+          pointer-events: none;
+        }
+        .flex-ms-box.open .flex-ms-caret { transform: translateY(-50%) rotate(180deg); }
+        .flex-ms-tag {
+          display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 5px; border-radius: 3px;
+          background: var(--green-700, #239277); color: #fff; font-size: 10px; font-weight: 700;
+          max-width: 100%;
+        }
+        .flex-ms-tag-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .flex-ms-tag-x {
+          border: 0; background: transparent; color: #fff; width: 16px; height: 16px; border-radius: 2px;
+          cursor: pointer; font-size: 12px; line-height: 1; padding: 0; opacity: 0.9; flex-shrink: 0;
+        }
+        .flex-ms-tag-x:hover { opacity: 1; background: rgba(0,0,0,0.12); }
+        .flex-ms-dropdown {
+          position: absolute; left: 0; right: 0; top: calc(100% + 3px); z-index: 40;
+          max-height: 200px; overflow-y: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.08); padding: 3px;
+        }
+        .flex-ms-opt {
+          display: block; width: 100%; text-align: left; padding: 7px 10px; border: 0; border-radius: 6px;
+          background: transparent; font-size: 12px; font-weight: 600; color: #111827; cursor: pointer;
+        }
+        .flex-ms-opt:hover, .flex-ms-opt:focus { background: var(--green-700, #239277); color: #fff; outline: none; }
+        .flex-ms-opt-empty { padding: 8px; font-size: 11px; color: #9ca3af; text-align: center; }
+        #flexFields .flex-ms-hint { font-size: 11px; margin-top: 8px; line-height: 1.35; color: #6b7280; }
+        @media (max-width: 800px) {
+            .container { padding: 12px; }
+            .page { padding: 14px; }
+            .panel { padding: 12px; overflow-x: auto; }
+            table { min-width: 900px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="uiAppNav" aria-label="Сторінки діагностичного стенду">
+          <span class="uiAppNav-label">Сторінки</span>
+          <a href="../index.html">Головна</a>
+          <a href="../advertiser/banner.html">Banner Adv</a>
+          <a href="../advertiser/native.html">Native Adv</a>
+          <a class="active" href="./banner.html">Banner Web</a>
+          <a href="./native.html">Native Web</a>
+          <a href="../demo/site.html">Демо сайт</a>
+        </nav>
+        <div class="uiTopbar">
+          <div>
+            <h1>Паблішер — інвентар</h1>
+            <div class="uiSub"><a class="uiLink" href="../index.html">← Головна</a> · Інвентар зберігається в LocalStorage</div>
+          </div>
+          <div class="uiActions">
+            <button class="uiBtn" type="button" id="loadBtn">Завантажити зі сховища</button>
+            <button class="uiBtn" type="button" id="resetBtn">Скинути сховище</button>
+          </div>
+        </div>
+
+        <section class="page" id="listView">
+            <div class="format-tabs">
+                <div class="format-tab">Web Push</div>
+                <div class="format-tab">InPage</div>
+                <div class="format-tab">OnClick</div>
+                <div class="format-tab active">Banner</div>
+                <div class="format-tab">Native</div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-toolbar">
+                    <button class="btn" type="button" onclick="openSpotForm()">Додати плейсмент</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-name">Name</th>
+                            <th class="col-size">Size / flex</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-code">HTML-code</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spotsTable"></tbody>
+                </table>
+            </div>
+
+            <button class="btn save-list" type="button" onclick="saveConfiguration()">Save</button>
+        </section>
+
+        <section class="page hidden" id="formView">
+            <div class="form-page">
+                <div class="form-title">
+                    <h1 id="formTitle">Додати плейсмент</h1>
+                </div>
+
+                <form id="spotForm" onsubmit="saveSpot(event)">
+                    <div class="form-group">
+                        <label for="spotName">Назва</label>
+                        <input type="text" id="spotName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bannerSize">Розмір банера (основний підпис, якщо не flex)</label>
+                        <select id="bannerSize">
+                            <option>300x100</option>
+                            <option>300x250</option>
+                            <option>300x600</option>
+                            <option>728x90</option>
+                            <option>900x250</option>
+                            <option>250x250</option>
+                            <option>300x50</option>
+                            <option>320x480</option>
+                            <option>320x50</option>
+                            <option>160x600</option>
+                            <option>970x250</option>
+                            <option>336x280</option>
+                            <option>468x60</option>
+                            <option>120x600</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="radio-row" style="cursor:pointer;">
+                            <input type="checkbox" id="flexEnabled" style="width:16px;height:16px;accent-color:#239277;">
+                            Гнучкий слот (multi-size: desktop / mobile)
+                        </label>
+                        <div id="flexFields" style="display:none;margin-top:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;">
+                            <div class="form-group">
+                                <div class="flex-ms-label-row">
+                                    <label>Desktop — пріоритет (порядок вибору)</label>
+                                    <button type="button" class="flex-ms-clear" data-flex-clear="desktop">Очистити все</button>
+                                </div>
+                                <div class="flex-ms" data-flex-tier="desktop">
+                                    <div class="flex-ms-box" role="combobox" aria-expanded="false" aria-haspopup="listbox" tabindex="0">
+                                        <div class="flex-ms-tags"></div>
+                                        <span class="flex-ms-placeholder">Оберіть розміри зі списку…</span>
+                                        <span class="flex-ms-caret" aria-hidden="true">▼</span>
+                                    </div>
+                                    <div class="flex-ms-dropdown" hidden role="listbox"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="flex-ms-label-row">
+                                    <label>Mobile — пріоритет (порядок вибору)</label>
+                                    <button type="button" class="flex-ms-clear" data-flex-clear="mobile">Очистити все</button>
+                                </div>
+                                <div class="flex-ms" data-flex-tier="mobile">
+                                    <div class="flex-ms-box" role="combobox" aria-expanded="false" aria-haspopup="listbox" tabindex="0">
+                                        <div class="flex-ms-tags"></div>
+                                        <span class="flex-ms-placeholder">Оберіть розміри зі списку…</span>
+                                        <span class="flex-ms-caret" aria-hidden="true">▼</span>
+                                    </div>
+                                    <div class="flex-ms-dropdown" hidden role="listbox"></div>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="flexBp">Breakpoint (px): viewport ≤ цього значення → mobile tier</label>
+                                <input type="number" id="flexBp" min="0" step="1" value="600" style="max-width:140px;">
+                            </div>
+                            <div class="flex-ms-hint">
+                              Порядок тегів зліва направо = пріоритет для SDK (як ви додавали розміри зі списку). × прибирає значення.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="creativeBind">Привʼязати креатив (опційно)</label>
+                        <select id="creativeBind">
+                          <option value="">Авто: за розміром</option>
+                        </select>
+                        <div style="font-size:12px;color:#6b7280;margin-top:6px;">
+                          Якщо вибрано — віртуальний сайт відобразить саме цей креатив у плейсменті.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Режим банера</label>
+                        <label class="radio-row">
+                            <input type="radio" name="bannerMode" value="bright">
+                            Bright
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Статус</label>
+                        <label class="switch">
+                            <input type="checkbox" id="spotStatus" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn" type="submit">Save</button>
+                        <button class="btn secondary" type="button" onclick="showListView()">Скасувати</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+      import { StorageKeys, normalizeBannerSize } from "../sdk/models.js";
+      import { readJson, writeJson, resetAll, ensureArray } from "../sdk/storage.js";
+
+      let editingSpotId = null;
+      let nextSpotId = 726437;
+
+      const BANNER_SIZE_OPTIONS = [
+        "300x100",
+        "300x250",
+        "300x600",
+        "728x90",
+        "900x250",
+        "250x250",
+        "300x50",
+        "320x480",
+        "320x50",
+        "160x600",
+        "970x250",
+        "336x280",
+        "468x60",
+        "120x600",
+      ];
+
+      function getFlexMsEls(tier) {
+        const root = document.querySelector(`#flexFields .flex-ms[data-flex-tier="${tier}"]`);
+        if (!root) return null;
+        return {
+          root,
+          box: root.querySelector(".flex-ms-box"),
+          tags: root.querySelector(".flex-ms-tags"),
+          ph: root.querySelector(".flex-ms-placeholder"),
+          dropdown: root.querySelector(".flex-ms-dropdown"),
+        };
+      }
+
+      function readFlexMs(tier) {
+        const els = getFlexMsEls(tier);
+        if (!els) return [];
+        return Array.from(els.tags.querySelectorAll(".flex-ms-tag[data-size]"))
+          .map((el) => normalizeBannerSize(el.getAttribute("data-size")))
+          .filter(Boolean);
+      }
+
+      function renderFlexMsTags(tier, sizes) {
+        const els = getFlexMsEls(tier);
+        if (!els) return;
+        const list = ensureArray(sizes)
+          .map((s) => normalizeBannerSize(s))
+          .filter(Boolean);
+        const label = (s) => s.replace(/x/gi, "×");
+        els.tags.innerHTML = list
+          .map(
+            (s) => `
+          <span class="flex-ms-tag" data-size="${s}">
+            <span class="flex-ms-tag-text">${label(s)}</span>
+            <button type="button" class="flex-ms-tag-x" data-tag-act="rm" title="Прибрати" aria-label="Прибрати">×</button>
+          </span>`,
+          )
+          .join("");
+        els.ph.style.display = list.length ? "none" : "";
+      }
+
+      function refreshFlexMsDropdown(tier) {
+        const els = getFlexMsEls(tier);
+        if (!els) return;
+        const selected = new Set(readFlexMs(tier));
+        const rest = BANNER_SIZE_OPTIONS.filter((s) => !selected.has(s));
+        els.dropdown.innerHTML = rest.length
+          ? rest
+              .map(
+                (s) =>
+                  `<button type="button" class="flex-ms-opt" data-size="${s}" role="option">${s.replace(/x/gi, " × ")}</button>`,
+              )
+              .join("")
+          : `<div class="flex-ms-opt-empty">Усі розміри вже додані</div>`;
+      }
+
+      function closeAllFlexMsDropdowns() {
+        document.querySelectorAll("#flexFields .flex-ms-dropdown").forEach((d) => {
+          d.hidden = true;
+        });
+        document.querySelectorAll("#flexFields .flex-ms-box").forEach((b) => {
+          b.classList.remove("open");
+          b.setAttribute("aria-expanded", "false");
+        });
+      }
+
+      function toggleFlexMsDropdown(tier) {
+        const els = getFlexMsEls(tier);
+        if (!els) return;
+        const opening = els.dropdown.hidden;
+        closeAllFlexMsDropdowns();
+        if (opening) {
+          refreshFlexMsDropdown(tier);
+          els.dropdown.hidden = false;
+          els.box.classList.add("open");
+          els.box.setAttribute("aria-expanded", "true");
+        }
+      }
+
+      function toggleFlexFields() {
+        const on = document.getElementById("flexEnabled")?.checked;
+        const box = document.getElementById("flexFields");
+        if (box) box.style.display = on ? "block" : "none";
+      }
+
+      const defaultSpots = [
+        {
+          id: 726435,
+          name: "Spot 1",
+          size: "728x90",
+          status: true,
+          mode: "",
+          flexSizes: { desktop: ["728x90", "970x250"], mobile: ["320x50", "300x250"], breakpoint: 600 },
+        },
+        { id: 726436, name: "Spot 2", size: "300x250", status: true, mode: "" },
+        { id: 726437, name: "Sidebar", size: "300x250", status: true, mode: "" },
+        { id: 726438, name: "In-article strip", size: "468x60", status: true, mode: "" },
+        { id: 726439, name: "Mid article LDB", size: "728x90", status: true, mode: "" },
+        { id: 726440, name: "Rail skyscraper", size: "160x600", status: true, mode: "" },
+        {
+          id: 726441,
+          name: "Article mega",
+          size: "970x250",
+          status: true,
+          mode: "",
+          flexSizes: {
+            desktop: ["970x250", "728x90"],
+            mobile: ["300x250", "320x50"],
+            breakpoint: 600,
+          },
+        },
+      ];
+
+      const savedSpots = ensureArray(readJson(StorageKeys.bannerSpots, []));
+      let spots = savedSpots.length ? savedSpots : defaultSpots.slice();
+
+      function persistSpots() {
+        writeJson(StorageKeys.bannerSpots, spots);
+      }
+
+      function bumpNextSpotIdFromList() {
+        const maxId = spots.reduce((m, s) => Math.max(m, Number(s.id) || 0), 0);
+        nextSpotId = Math.max(nextSpotId, maxId + 1);
+      }
+      bumpNextSpotIdFromList();
+
+      function refreshCreativeBindOptions() {
+        const select = document.getElementById("creativeBind");
+        if (!select) return;
+        const creatives = ensureArray(readJson(StorageKeys.bannerCreatives, []));
+        const current = select.value;
+        select.innerHTML = `<option value="">Авто: за розміром</option>` + creatives
+          .map((c) => `<option value="${String(c.id)}">${String(c.id)} (${c.type || "?"}, ${c.size || "?"})</option>`)
+          .join("");
+        select.value = current;
+      }
+
+      function htmlCode(spot) {
+        return `<div data-banner-id="${spot.id}"></div>`;
+      }
+
+      function renderSpots() {
+        const tbody = document.getElementById('spotsTable');
+        tbody.innerHTML = spots.map(spot => `
+          <tr>
+            <td>${spot.id}</td>
+            <td>${spot.name}</td>
+            <td title="${spot.flexSizes ? `flex desktop: ${(spot.flexSizes.desktop || []).join(", ")} · mobile: ${(spot.flexSizes.mobile || []).join(", ")}` : ""}">${spot.flexSizes ? `flex · ${spot.size}` : spot.size}</td>
+            <td>
+              <label class="switch" title="Toggle status">
+                <input type="checkbox" ${spot.status ? 'checked' : ''} onchange="toggleSpotStatus(${spot.id}, this.checked)">
+                <span class="slider"></span>
+              </label>
+            </td>
+            <td>
+              <div class="code-cell">
+                <input class="code-input" type="text" readonly value='${htmlCode(spot)}'>
+                <button class="copy-btn" type="button" onclick="copyHtmlCode(${spot.id})">copy HTML-code</button>
+              </div>
+            </td>
+            <td>
+              <button class="icon-btn" type="button" title="Edit spot" onclick="openSpotForm(${spot.id})">&#9998;</button>
+              <button class="icon-btn" type="button" title="Delete spot" onclick="deleteSpot(${spot.id})">&#128465;</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      window.openSpotForm = function (spotId) {
+        editingSpotId = spotId || null;
+        const spot = spots.find(item => item.id === spotId);
+        document.getElementById('formTitle').textContent = editingSpotId ? `Редагувати плейсмент` : `Додати плейсмент`;
+        document.getElementById('spotName').value = spot ? spot.name : `Spot ${spots.length + 1}`;
+        document.getElementById('bannerSize').value = spot ? spot.size : '300x250';
+        document.getElementById('spotStatus').checked = spot ? spot.status : true;
+        document.querySelector('input[name="bannerMode"][value="bright"]').checked = spot ? spot.mode === 'bright' : false;
+        const flex = spot?.flexSizes;
+        document.getElementById("flexEnabled").checked = Boolean(flex?.desktop?.length || flex?.mobile?.length);
+        closeAllFlexMsDropdowns();
+        renderFlexMsTags("desktop", flex?.desktop || []);
+        renderFlexMsTags("mobile", flex?.mobile || []);
+        document.getElementById("flexBp").value = flex?.breakpoint != null ? String(flex.breakpoint) : "600";
+        toggleFlexFields();
+        refreshCreativeBindOptions();
+        document.getElementById('creativeBind').value = spot && spot.creativeId ? String(spot.creativeId) : "";
+        document.getElementById('listView').classList.add('hidden');
+        document.getElementById('formView').classList.remove('hidden');
+      }
+
+      window.showListView = function () {
+        document.getElementById('formView').classList.add('hidden');
+        document.getElementById('listView').classList.remove('hidden');
+      }
+
+      window.saveSpot = function (event) {
+        event.preventDefault();
+        const modeInput = document.querySelector('input[name="bannerMode"]:checked');
+        const creativeId = document.getElementById("creativeBind").value || "";
+        const flexOn = document.getElementById("flexEnabled").checked;
+        const flexDesktop = readFlexMs("desktop");
+        const flexMobile = readFlexMs("mobile");
+        const flexBp = Number(document.getElementById("flexBp").value);
+        const data = {
+          name: document.getElementById('spotName').value.trim(),
+          size: document.getElementById('bannerSize').value,
+          status: document.getElementById('spotStatus').checked,
+          mode: modeInput ? modeInput.value : '',
+          creativeId: creativeId ? creativeId : undefined,
+        };
+        if (flexOn && (flexDesktop.length || flexMobile.length)) {
+          data.flexSizes = {
+            desktop: flexDesktop,
+            mobile: flexMobile,
+            breakpoint: Number.isFinite(flexBp) ? flexBp : 600,
+          };
+          if (flexDesktop.length) data.size = flexDesktop[0];
+        } else {
+          delete data.flexSizes;
+        }
+        if (editingSpotId) {
+          const spot = spots.find(item => item.id === editingSpotId);
+          Object.assign(spot, data);
+          if (!data.flexSizes) delete spot.flexSizes;
+          if (!creativeId) delete spot.creativeId;
+        } else {
+          const row = { id: nextSpotId++, ...data };
+          if (!row.flexSizes) delete row.flexSizes;
+          if (!creativeId) delete row.creativeId;
+          spots.push(row);
+        }
+        renderSpots();
+        persistSpots();
+        window.showListView();
+      }
+
+      window.toggleSpotStatus = function (spotId, status) {
+        const spot = spots.find(item => item.id === spotId);
+        if (spot) spot.status = status;
+        persistSpots();
+      }
+
+      window.deleteSpot = function (spotId) {
+        const index = spots.findIndex(item => item.id === spotId);
+        if (index !== -1) {
+          spots.splice(index, 1);
+          renderSpots();
+          persistSpots();
+        }
+      }
+
+      window.copyHtmlCode = function (spotId) {
+        const spot = spots.find(item => item.id === spotId);
+        if (!spot) return;
+        const code = htmlCode(spot);
+        if (navigator.clipboard) navigator.clipboard.writeText(code);
+      }
+
+      window.saveConfiguration = function () {
+        persistSpots();
+        alert('Інвентар Banner збережено в LocalStorage.');
+      }
+
+      function loadSaved() {
+        const saved = ensureArray(readJson(StorageKeys.bannerSpots, []));
+        if (!saved.length) return alert("Немає збережених плейсментів.");
+        spots = saved;
+        bumpNextSpotIdFromList();
+        renderSpots();
+        alert("Плейсменти завантажено зі сховища.");
+      }
+
+      document.getElementById("loadBtn").addEventListener("click", loadSaved);
+      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); alert("Сховище очищено."); });
+      document.getElementById("flexEnabled")?.addEventListener("change", toggleFlexFields);
+
+      document.getElementById("flexFields")?.addEventListener("click", (e) => {
+        const clr = e.target.closest("[data-flex-clear]");
+        if (clr) {
+          const tier = clr.getAttribute("data-flex-clear");
+          renderFlexMsTags(tier, []);
+          refreshFlexMsDropdown(tier);
+          return;
+        }
+
+        const opt = e.target.closest(".flex-ms-opt[data-size]");
+        if (opt) {
+          e.stopPropagation();
+          const tier = opt.closest(".flex-ms")?.getAttribute("data-flex-tier");
+          if (!tier) return;
+          const s = normalizeBannerSize(opt.getAttribute("data-size"));
+          if (!s) return;
+          const cur = readFlexMs(tier);
+          if (cur.includes(s)) return;
+          renderFlexMsTags(tier, [...cur, s]);
+          refreshFlexMsDropdown(tier);
+          return;
+        }
+
+        const rmBtn = e.target.closest(".flex-ms-tag-x[data-tag-act='rm']");
+        if (rmBtn) {
+          e.stopPropagation();
+          const tag = rmBtn.closest(".flex-ms-tag");
+          const tier = tag?.closest(".flex-ms")?.getAttribute("data-flex-tier");
+          if (!tag || !tier) return;
+          const s = normalizeBannerSize(tag.getAttribute("data-size"));
+          const cur = readFlexMs(tier).filter((x) => x !== s);
+          renderFlexMsTags(tier, cur);
+          refreshFlexMsDropdown(tier);
+          return;
+        }
+
+        const box = e.target.closest(".flex-ms-box");
+        if (box && !e.target.closest(".flex-ms-tag")) {
+          const tier = box.closest(".flex-ms")?.getAttribute("data-flex-tier");
+          if (tier) toggleFlexMsDropdown(tier);
+        }
+      });
+
+      document.addEventListener("mousedown", (e) => {
+        if (e.target.closest("#flexFields .flex-ms")) return;
+        closeAllFlexMsDropdowns();
+      });
+
+      document.getElementById("flexFields")?.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeAllFlexMsDropdowns();
+      });
+
+      renderSpots();
+    </script>
+</body>
+</html>
+

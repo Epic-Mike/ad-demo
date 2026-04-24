@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Native Ad Placement Settings — Publisher</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 16px;
+        }
+        .header h1 {
+            font-size: 20px;
+            color: #555;
+            font-weight: 600;
+        }
+        .header .id {
+            font-size: 13px;
+            color: #888;
+        }
+
+        /* Format tabs */
+        .format-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .format-tab {
+            padding: 6px 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            color: #555;
+        }
+        .format-tab.active {
+            background: #5cb85c;
+            color: white;
+            border-color: #5cb85c;
+        }
+
+        /* Main 2-column layout */
+        .main-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+        .settings-column {
+            flex: 1;
+            min-width: 0;
+        }
+        .preview-column {
+            width: 380px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 20px;
+        }
+        @media (max-width: 1100px) {
+            .main-layout { flex-direction: column; }
+            .preview-column {
+                width: 100%;
+                position: static;
+            }
+        }
+
+        /* Section cards */
+        .section {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 14px 18px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .section-header h2 {
+            font-size: 16px;
+            color: #555;
+            font-weight: 600;
+        }
+        .section-header .arrow {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        .section.collapsed .section-header .arrow {
+            transform: rotate(-90deg);
+        }
+        .section.collapsed .section-body {
+            display: none;
+        }
+        .section-body {
+            padding: 18px;
+        }
+
+        /* Form fields */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #555;
+            background: white;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #5cb85c;
+        }
+        input[type="checkbox"] {
+            margin-right: 6px;
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+
+        .subsection {
+            margin-bottom: 20px;
+        }
+        .subsection:last-child {
+            margin-bottom: 0;
+        }
+        .subsection h3 {
+            font-size: 14px;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Color input */
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-input-wrapper input[type="text"] {
+            flex: 1;
+        }
+        .color-preview {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        /* Save button */
+        .actions {
+            margin-top: 20px;
+        }
+        .btn-save {
+            background: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .btn-save:hover {
+            background: #4cae4c;
+        }
+
+        /* Preview Panel (Right Column) */
+        .preview-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .preview-card h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .preview-device-toggle {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        .preview-device-toggle button {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .preview-device-toggle button.active {
+            background: #1f2937;
+            color: white;
+            border-color: #1f2937;
+        }
+
+        /* Native preview widget */
+        .native-widget {
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .native-widget .ad-label {
+            font-size: 10px;
+            color: #999;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            text-align: right;
+            letter-spacing: 0.03em;
+        }
+        .native-grid {
+            display: grid;
+            gap: 10px;
+            padding: 10px;
+        }
+        .native-item {
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .native-item:hover {
+            opacity: 0.85;
+        }
+        .native-item:hover .title {
+            color: var(--title-hover-color, inherit) !important;
+        }
+        .native-item .thumb {
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            overflow: hidden;
+        }
+        .native-item.zoom-enabled:hover .thumb {
+            transform: scale(1.03);
+        }
+        .native-item .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .native-item .content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .native-item .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        .native-item .desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        /* ВИПРАВЛЕНИЙ БЛОК — footer замість meta */
+        .native-item .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;           /* ← відступ між брендом і кнопкою */
+            margin-top: auto;    /* ← прижимає до низу контенту */
+        }
+        .native-item .brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #888;
+            min-width: 0;        /* ← дозволяє скорочуватися */
+        }
+        .native-item .brand-logo {
+            width: 16px;
+            height: 16px;
+            background: #ddd;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .native-item .brand-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .native-item .cta {
+            background: #3b82f6;
+            color: white;
+            padding: 5px 14px;       /* ← трохи більше повітря */
+            border-radius: 6px;
+            font-size: 12px;         /* ← трохи більший шрифт */
+            font-weight: 500;
+            border: none;
+            white-space: nowrap;     /* ← заборона переносу */
+            flex-shrink: 0;          /* ← не стискається */
+            cursor: pointer;
+        }
+        .native-item .cta:hover {
+            background: var(--cta-hover-bg, #2563eb) !important;
+        }
+        
+        /* Mobile preview */
+        .native-widget.mobile .native-item {
+            flex-direction: column;
+        }
+        .native-widget.mobile .native-item .thumb {
+            width: 100%;
+        }
+        .native-widget.mobile .native-item .title {
+            font-size: 15px;
+        }
+        .native-widget.mobile .native-item .desc {
+            font-size: 13px;
+        }
+        .native-widget.mobile .native-item .footer {
+            margin-top: 8px;
+        }
+
+        /* Preview info */
+        .preview-info {
+            margin-top: 14px;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .preview-info code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Code configuration: NativeAd <span class="id">(ID: 112345678)</span></h1>
+        </div>
+
+        <!-- Format Tabs -->
+        <div class="format-tabs">
+            <div class="format-tab">Web Push</div>
+            <div class="format-tab">InPage</div>
+            <div class="format-tab">OnClick</div>
+            <div class="format-tab">Banner</div>
+            <div class="format-tab active">Native</div>
+        </div>
+
+        <!-- Main 2-Column Layout -->
+        <div class="main-layout">
+            <!-- Left: Settings -->
+            <div class="settings-column">
+                <!-- Layouts -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Layouts</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="fixedSize">
+                                Fixed Widget Size
+                            </label>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Width</label>
+                                <input type="number" value="250" id="widgetWidth">
+                            </div>
+                            <div class="form-group">
+                                <label>Height</label>
+                                <input type="number" value="200" id="widgetHeight">
+                            </div>
+                        </div>
+                        <div class="subsection">
+                            <h3>Desktop & Tablet</h3>
+                            <div class="form-group">
+                                <label>Columns</label>
+                                <select id="desktopCols">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option selected>4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rows</label>
+                                <select id="desktopRows">
+                                    <option selected>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                            </div>
+                            <div class="two-col">
+                                <div class="form-group">
+                                    <label>Horizontal Spacing</label>
+                                    <input type="number" value="10" id="desktopHSpace">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vertical Spacing</label>
+                                    <input type="number" value="10" id="desktopVSpace">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Image Aspect Ratio</label>
+                                <select id="desktopAspect">
+                                    <option>1:1</option>
+                                    <option selected>3:2</option>
+                                    <option>16:9</option>
+                                    <option>4:3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Text Lines</label>
+                                <input type="number" value="2" id="desktopMaxLines">
+                            </div>
+                        </div>
+                        <div class="subsection">
+                            <h3>Mobile</h3>
+                            <div class="form-group">
+                                <label>Columns</label>
+                                <select id="mobileCols">
+                                    <option selected>1</option>
+                                    <option>2</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rows</label>
+                                <select id="mobileRows">
+                                    <option>1</option>
+                                    <option selected>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                            </div>
+                            <div class="two-col">
+                                <div class="form-group">
+                                    <label>Horizontal Spacing</label>
+                                    <input type="number" value="10" id="mobileHSpace">
+                                </div>
+                                <div class="form-group">
+                                    <label>Vertical Spacing</label>
+                                    <input type="number" value="10" id="mobileVSpace">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Image Aspect Ratio</label>
+                                <select id="mobileAspect">
+                                    <option>1:1</option>
+                                    <option>3:2</option>
+                                    <option selected>4:3</option>
+                                    <option>16:9</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Text Lines</label>
+                                <input type="number" value="2" id="mobileMaxLines">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Layout Activation Width</label>
+                                <input type="number" value="450" id="mobileBreakpoint">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appearance -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Appearance Options</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label>Background color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(255,255,255,1)" id="bgColor">
+                                <div class="color-preview" style="background: rgba(255,255,255,1);" onclick="pickColor('bgColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Image Border Size</label>
+                                <input type="number" value="0" id="imgBorderSize">
+                            </div>
+                            <div class="form-group">
+                                <label>Image Border Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="text" value="rgba(0,0,0,1)" id="imgBorderColor">
+                                    <div class="color-preview" style="background: rgba(0,0,0,1);" onclick="pickColor('imgBorderColor', this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="zoomEffect">
+                                Zoom Effect on Hover
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Image Border Radius</label>
+                            <input type="number" value="4" id="imgBorderRadius">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Formatting -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Text Formatting</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label>Font Family</label>
+                            <select id="textFont">
+                                <option selected>Roboto, sans-serif</option>
+                                <option>Arial, sans-serif</option>
+                                <option>Georgia, serif</option>
+                                <option>Inter, sans-serif</option>
+                            </select>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Title Size (px)</label>
+                                <input type="number" value="14" id="titleSize">
+                            </div>
+                            <div class="form-group">
+                                <label>Description Size (px)</label>
+                                <input type="number" value="12" id="descSize">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Title Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(0,0,0,1)" id="titleColor">
+                                <div class="color-preview" style="background: rgba(0,0,0,1);" onclick="pickColor('titleColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Title Hover Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(0,0,0,1)" id="titleHoverColor">
+                                <div class="color-preview" style="background: rgba(0,0,0,1);" onclick="pickColor('titleHoverColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(102,102,102,1)" id="descColor">
+                                <div class="color-preview" style="background: rgba(102,102,102,1);" onclick="pickColor('descColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Text Alignment</label>
+                            <select id="textAlign">
+                                <option selected>Left</option>
+                                <option>Center</option>
+                                <option>Right</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="titleBold" checked>
+                                Title Bold
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="titleItalic">
+                                Title Italic
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand & Logo -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Brand & Logo Settings</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showBrand" checked>
+                                Show Brand Name
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showLogo" checked>
+                                Show Brand Logo
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Brand Name Position</label>
+                            <select id="brandPosition">
+                                <option>Above Title</option>
+                                <option selected>Below Title</option>
+                                <option>Next to CTA</option>
+                            </select>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Logo Size (px)</label>
+                                <input type="number" value="16" id="logoSize">
+                            </div>
+                            <div class="form-group">
+                                <label>Logo Border Radius (%)</label>
+                                <input type="number" value="50" id="logoRadius">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Brand Name Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(136,136,136,1)" id="brandColor">
+                                <div class="color-preview" style="background: rgba(136,136,136,1);" onclick="pickColor('brandColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Brand Name Size (px)</label>
+                            <input type="number" value="11" id="brandSize">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>CTA Button Settings</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showCta" checked>
+                                Show CTA Button
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Style</label>
+                            <select id="ctaStyle">
+                                <option selected>Filled</option>
+                                <option>Outlined</option>
+                                <option>Text Only</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Background</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(59,130,246,1)" id="ctaBg">
+                                <div class="color-preview" style="background: rgba(59,130,246,1);" onclick="pickColor('ctaBg', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Text Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(255,255,255,1)" id="ctaTextColor">
+                                <div class="color-preview" style="background: rgba(255,255,255,1);" onclick="pickColor('ctaTextColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Hover Background</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(37,99,235,1)" id="ctaHoverBg">
+                                <div class="color-preview" style="background: rgba(37,99,235,1);" onclick="pickColor('ctaHoverBg', this)"></div>
+                            </div>
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>Button Padding X (px)</label>
+                                <input type="number" value="12" id="ctaPadX">
+                            </div>
+                            <div class="form-group">
+                                <label>Button Padding Y (px)</label>
+                                <input type="number" value="6" id="ctaPadY">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Button Border Radius (px)</label>
+                            <input type="number" value="6" id="ctaRadius">
+                        </div>
+                        <div class="form-group">
+                            <label>Button Position</label>
+                            <select id="ctaPosition">
+                                <option selected>Right</option>
+                                <option>Left</option>
+                                <option>Below Text</option>
+                                <option>Full Width</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ads Label -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h2>Ads Label</h2>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showLabel" checked>
+                                Show Label
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Label Text</label>
+                            <input type="text" value="Ads" id="labelText">
+                        </div>
+                        <div class="form-group">
+                            <label>Label Font</label>
+                            <select id="labelFont">
+                                <option selected>Roboto, sans-serif</option>
+                                <option>Arial, sans-serif</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Label Size (px)</label>
+                            <input type="number" value="10" id="labelSize">
+                        </div>
+                        <div class="form-group">
+                            <label>Label Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="text" value="rgba(153,153,153,1)" id="labelColor">
+                                <div class="color-preview" style="background: rgba(153,153,153,1);" onclick="pickColor('labelColor', this)"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Label Position</label>
+                            <select id="labelPosition">
+                                <option>Top Left</option>
+                                <option selected>Top Right</option>
+                                <option>Bottom Left</option>
+                                <option>Bottom Right</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="labelBold">
+                                Bold
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="labelItalic">
+                                Italic
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save -->
+                <div class="actions">
+                    <button class="btn-save" onclick="saveSettings()">Save</button>
+                </div>
+            </div>
+
+            <!-- Right: Preview -->
+            <div class="preview-column">
+                <div class="preview-card">
+                    <h3>Live Preview</h3>
+                    
+                    <div class="preview-device-toggle">
+                        <button class="active" onclick="setDevice('desktop')">🖥️ Desktop</button>
+                        <button onclick="setDevice('mobile')">📱 Mobile</button>
+                    </div>
+
+                    <div class="native-widget" id="previewWidget">
+                        <div class="ad-label" id="previewLabel">Ads</div>
+                        <div class="native-grid" id="previewGrid" style="grid-template-columns: repeat(2, 1fr);">
+                            <div class="native-item">
+                                <div class="thumb">📷 Image</div>
+                                <div class="content">
+                                    <div class="title" id="pTitle">Your headline here</div>
+                                    <div class="desc" id="pDesc">Description text goes here...</div>
+                                    <div class="footer">
+                                        <div class="brand">
+                                            <div class="brand-logo"></div>
+                                            <span class="brand-name" id="pBrand">Brand</span>
+                                        </div>
+                                        <button class="cta" id="pCta">Learn More</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-info">
+                        Widget ID: <code>native-112345678</code><br>
+                        Breakpoint: <code id="infoBreakpoint">450px</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(header) {
+            header.parentElement.classList.toggle('collapsed');
+        }
+
+        function pickColor(inputId, previewEl) {
+            const input = document.getElementById(inputId);
+            const color = prompt('Enter color (rgba or hex):', input.value);
+            if (color) {
+                input.value = color;
+                previewEl.style.background = color;
+                updatePreview();
+            }
+        }
+
+        function setDevice(device) {
+            const widget = document.getElementById('previewWidget');
+            const buttons = document.querySelectorAll('.preview-device-toggle button');
+            buttons.forEach(b => b.classList.remove('active'));
+            
+            if (device === 'mobile') {
+                widget.classList.add('mobile');
+                buttons[1].classList.add('active');
+            } else {
+                widget.classList.remove('mobile');
+                buttons[0].classList.add('active');
+            }
+            updatePreview();
+        }
+
+        function updatePreview() {
+            // --- Layout ---
+            const widget = document.getElementById('previewWidget');
+            const isMobile = widget.classList.contains('mobile');
+            const grid = document.getElementById('previewGrid');
+            const cols = Number(document.getElementById(isMobile ? 'mobileCols' : 'desktopCols').value);
+            const rows = Number(document.getElementById(isMobile ? 'mobileRows' : 'desktopRows').value);
+            const hSpace = Number(document.getElementById(isMobile ? 'mobileHSpace' : 'desktopHSpace').value);
+            const vSpace = Number(document.getElementById(isMobile ? 'mobileVSpace' : 'desktopVSpace').value);
+            const aspect = document.getElementById(isMobile ? 'mobileAspect' : 'desktopAspect').value;
+            const maxLines = document.getElementById(isMobile ? 'mobileMaxLines' : 'desktopMaxLines').value;
+            renderPreviewItems(Math.max(cols * rows, 1));
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.style.columnGap = hSpace + 'px';
+            grid.style.rowGap = vSpace + 'px';
+            grid.style.padding = vSpace + 'px ' + hSpace + 'px';
+        
+            // --- Appearance ---
+            const bgColor = document.getElementById('bgColor').value;
+            const imgBorderRadius = document.getElementById('imgBorderRadius').value;
+            const imgBorderSize = document.getElementById('imgBorderSize').value;
+            const imgBorderColor = document.getElementById('imgBorderColor').value;
+            const zoomEffect = document.getElementById('zoomEffect').checked;
+            const fixedSize = document.getElementById('fixedSize').checked;
+            widget.style.background = bgColor;
+            widget.style.width = fixedSize ? document.getElementById('widgetWidth').value + 'px' : '';
+            widget.style.height = fixedSize ? document.getElementById('widgetHeight').value + 'px' : '';
+            widget.style.overflow = fixedSize ? 'auto' : '';
+        
+            document.querySelectorAll('.native-item .thumb').forEach(el => {
+                el.style.borderRadius = imgBorderRadius + 'px';
+                el.style.border = imgBorderSize + 'px solid ' + imgBorderColor;
+                el.style.aspectRatio = aspect.replace(':', ' / ');
+                el.style.height = 'auto';
+            });
+            document.querySelectorAll('.native-item').forEach(el => {
+                el.classList.toggle('zoom-enabled', zoomEffect);
+            });
+        
+            // --- Label ---
+            const labelText = document.getElementById('labelText').value;
+            const labelColor = document.getElementById('labelColor').value;
+            const labelSize = document.getElementById('labelSize').value;
+            const labelFont = document.getElementById('labelFont').value;
+            const labelPosition = document.getElementById('labelPosition').value;
+            const labelBold = document.getElementById('labelBold').checked;
+            const labelItalic = document.getElementById('labelItalic').checked;
+            const showLabel = document.getElementById('showLabel').checked;
+            const label = document.getElementById('previewLabel');
+            label.textContent = labelText;
+            label.style.color = labelColor;
+            label.style.fontSize = labelSize + 'px';
+            label.style.fontFamily = labelFont;
+            label.style.fontWeight = labelBold ? '700' : '400';
+            label.style.fontStyle = labelItalic ? 'italic' : 'normal';
+            label.style.textAlign = labelPosition.includes('Left') ? 'left' : 'right';
+            label.style.order = labelPosition.includes('Bottom') ? '2' : '0';
+            label.style.display = showLabel ? 'block' : 'none';
+            grid.style.order = labelPosition.includes('Bottom') ? '1' : '2';
+            widget.style.display = 'flex';
+            widget.style.flexDirection = 'column';
+        
+            // --- Text ---
+            const textFont = document.getElementById('textFont').value;
+            const titleSize = document.getElementById('titleSize').value;
+            const descSize = document.getElementById('descSize').value;
+            const titleColor = document.getElementById('titleColor').value;
+            const titleHoverColor = document.getElementById('titleHoverColor').value;
+            const descColor = document.getElementById('descColor').value;
+            const textAlign = document.getElementById('textAlign').value;
+            const titleBold = document.getElementById('titleBold').checked;
+            const titleItalic = document.getElementById('titleItalic').checked;
+            widget.style.fontFamily = textFont;
+            widget.style.setProperty('--title-hover-color', titleHoverColor);
+        
+            document.querySelectorAll('.native-item .title').forEach(el => {
+                el.style.fontSize = titleSize + 'px';
+                el.style.color = titleColor;
+                el.style.textAlign = textAlign;
+                el.style.fontWeight = titleBold ? '600' : '400';
+                el.style.fontStyle = titleItalic ? 'italic' : 'normal';
+                el.style.display = '-webkit-box';
+                el.style.webkitLineClamp = maxLines;
+                el.style.webkitBoxOrient = 'vertical';
+                el.style.overflow = 'hidden';
+            });
+            document.querySelectorAll('.native-item .desc').forEach(el => {
+                el.style.fontSize = descSize + 'px';
+                el.style.color = descColor;
+                el.style.textAlign = textAlign;
+                el.style.display = '-webkit-box';
+                el.style.webkitLineClamp = maxLines;
+                el.style.webkitBoxOrient = 'vertical';
+                el.style.overflow = 'hidden';
+            });
+        
+            // --- Brand & Logo ---
+            const showBrand = document.getElementById('showBrand').checked;
+            const showLogo = document.getElementById('showLogo').checked;
+            const brandColor = document.getElementById('brandColor').value;
+            const brandSize = document.getElementById('brandSize').value;
+            const brandPosition = document.getElementById('brandPosition').value;
+            const logoSize = document.getElementById('logoSize').value;
+            const logoRadius = document.getElementById('logoRadius').value;
+        
+            applyBrandPosition(brandPosition);
+            document.querySelectorAll('.native-item .brand').forEach(el => {
+                el.style.display = showBrand ? 'flex' : 'none';
+            });
+            document.querySelectorAll('.native-item .brand-logo').forEach(el => {
+                el.style.display = showLogo ? 'block' : 'none';
+                el.style.width = logoSize + 'px';
+                el.style.height = logoSize + 'px';
+                el.style.borderRadius = logoRadius + '%';
+            });
+            document.querySelectorAll('.native-item .brand-name').forEach(el => {
+                el.style.color = brandColor;
+                el.style.fontSize = brandSize + 'px';
+            });
+        
+            // --- CTA ---
+            const showCta = document.getElementById('showCta').checked;
+            const ctaBg = document.getElementById('ctaBg').value;
+            const ctaTextColor = document.getElementById('ctaTextColor').value;
+            const ctaHoverBg = document.getElementById('ctaHoverBg').value;
+            const ctaStyle = document.getElementById('ctaStyle').value;
+            const ctaRadius = document.getElementById('ctaRadius').value;
+            const ctaPadX = document.getElementById('ctaPadX').value;
+            const ctaPadY = document.getElementById('ctaPadY').value;
+            const ctaPosition = document.getElementById('ctaPosition').value;
+            widget.style.setProperty('--cta-hover-bg', ctaHoverBg);
+        
+            document.querySelectorAll('.native-item .cta').forEach(el => {
+                el.style.display = showCta ? 'block' : 'none';
+                el.style.background = ctaStyle === 'Filled' ? ctaBg : 'transparent';
+                el.style.color = ctaStyle === 'Filled' ? ctaTextColor : ctaBg;
+                el.style.border = ctaStyle === 'Outlined' ? `1px solid ${ctaBg}` : 'none';
+                el.style.borderRadius = ctaRadius + 'px';
+                el.style.padding = ctaPadY + 'px ' + ctaPadX + 'px';
+                el.style.width = ctaPosition === 'Full Width' ? '100%' : '';
+            });
+            document.querySelectorAll('.native-item .footer').forEach(el => {
+                const col = ctaPosition === 'Below Text' || ctaPosition === 'Full Width';
+                el.style.flexDirection = col ? 'column' : 'row';
+                el.style.alignItems = ctaPosition === 'Right' || ctaPosition === 'Left' ? 'center' : 'stretch';
+                el.style.justifyContent = col ? '' : ctaPosition === 'Left' ? 'flex-start' : 'flex-end';
+            });
+        
+            // --- Breakpoint info ---
+            document.getElementById('infoBreakpoint').textContent = document.getElementById('mobileBreakpoint').value + 'px';
+        }
+
+        function renderPreviewItems(count) {
+            const grid = document.getElementById('previewGrid');
+            const currentCount = grid.querySelectorAll('.native-item').length;
+            if (currentCount === count) return;
+
+            const itemMarkup = `
+                <div class="native-item">
+                    <div class="thumb">📷 Image</div>
+                    <div class="content">
+                        <div class="title">Your headline here</div>
+                        <div class="desc">Description text goes here...</div>
+                        <div class="footer">
+                            <div class="brand">
+                                <div class="brand-logo"></div>
+                                <span class="brand-name">Brand</span>
+                            </div>
+                            <button class="cta">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.innerHTML = Array.from({ length: count }, () => itemMarkup).join('');
+        }
+
+        function applyBrandPosition(position) {
+            document.querySelectorAll('.native-item').forEach(item => {
+                const content = item.querySelector('.content');
+                const title = item.querySelector('.title');
+                const desc = item.querySelector('.desc');
+                const footer = item.querySelector('.footer');
+                const brand = item.querySelector('.brand');
+
+                if (position === 'Above Title') {
+                    content.insertBefore(brand, title);
+                } else if (position === 'Below Title') {
+                    content.insertBefore(brand, desc);
+                } else {
+                    footer.insertBefore(brand, footer.firstChild);
+                }
+            });
+        }
+
+        function saveSettings() {
+            const settings = {
+                layout: {
+                    fixedSize: document.getElementById('fixedSize').checked,
+                    width: document.getElementById('widgetWidth').value,
+                    height: document.getElementById('widgetHeight').value,
+                    desktop: {
+                        cols: document.getElementById('desktopCols').value,
+                        rows: document.getElementById('desktopRows').value,
+                        hSpace: document.getElementById('desktopHSpace').value,
+                        vSpace: document.getElementById('desktopVSpace').value,
+                        aspect: document.getElementById('desktopAspect').value,
+                        maxLines: document.getElementById('desktopMaxLines').value
+                    },
+                    mobile: {
+                        cols: document.getElementById('mobileCols').value,
+                        rows: document.getElementById('mobileRows').value,
+                        hSpace: document.getElementById('mobileHSpace').value,
+                        vSpace: document.getElementById('mobileVSpace').value,
+                        aspect: document.getElementById('mobileAspect').value,
+                        maxLines: document.getElementById('mobileMaxLines').value,
+                        breakpoint: document.getElementById('mobileBreakpoint').value
+                    }
+                },
+                appearance: {
+                    bgColor: document.getElementById('bgColor').value,
+                    imgBorderSize: document.getElementById('imgBorderSize').value,
+                    imgBorderColor: document.getElementById('imgBorderColor').value,
+                    imgBorderRadius: document.getElementById('imgBorderRadius').value,
+                    zoomEffect: document.getElementById('zoomEffect').checked
+                },
+                text: {
+                    font: document.getElementById('textFont').value,
+                    titleSize: document.getElementById('titleSize').value,
+                    descSize: document.getElementById('descSize').value,
+                    titleColor: document.getElementById('titleColor').value,
+                    titleHoverColor: document.getElementById('titleHoverColor').value,
+                    descColor: document.getElementById('descColor').value,
+                    align: document.getElementById('textAlign').value,
+                    titleBold: document.getElementById('titleBold').checked,
+                    titleItalic: document.getElementById('titleItalic').checked
+                },
+                brand: {
+                    showBrand: document.getElementById('showBrand').checked,
+                    showLogo: document.getElementById('showLogo').checked,
+                    position: document.getElementById('brandPosition').value,
+                    logoSize: document.getElementById('logoSize').value,
+                    logoRadius: document.getElementById('logoRadius').value,
+                    color: document.getElementById('brandColor').value,
+                    size: document.getElementById('brandSize').value
+                },
+                cta: {
+                    showCta: document.getElementById('showCta').checked,
+                    style: document.getElementById('ctaStyle').value,
+                    bg: document.getElementById('ctaBg').value,
+                    textColor: document.getElementById('ctaTextColor').value,
+                    hoverBg: document.getElementById('ctaHoverBg').value,
+                    padX: document.getElementById('ctaPadX').value,
+                    padY: document.getElementById('ctaPadY').value,
+                    radius: document.getElementById('ctaRadius').value,
+                    position: document.getElementById('ctaPosition').value
+                },
+                label: {
+                    show: document.getElementById('showLabel').checked,
+                    text: document.getElementById('labelText').value,
+                    font: document.getElementById('labelFont').value,
+                    size: document.getElementById('labelSize').value,
+                    color: document.getElementById('labelColor').value,
+                    position: document.getElementById('labelPosition').value,
+                    bold: document.getElementById('labelBold').checked,
+                    italic: document.getElementById('labelItalic').checked
+                }
+            };
+            console.log('Settings saved:', settings);
+            alert('Settings saved! Check console for JSON.');
+        }
+
+        // Init
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('input', updatePreview);
+            el.addEventListener('change', updatePreview);
+});
+        updatePreview();
+    </script>
+</body>
+</html>

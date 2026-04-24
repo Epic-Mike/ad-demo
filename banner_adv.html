@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Banner Ad — AdNetwork</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .main-layout {
+            display: flex;
+            gap: 16px;
+            align-items: stretch;
+        }
+        @media (max-width: 900px) {
+            .main-layout { flex-direction: column; }
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 24px;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            overflow: hidden;
+        }
+        .card:last-child {
+            flex: 1.2;
+        }
+
+        .card-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: -24px;
+            padding: 24px;
+        }
+
+        .type-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #555;
+        }
+        .type-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #5cb85c;
+        }
+        .type-option:last-child { margin-bottom: 0; }
+
+        .upload-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+        .upload-zone:hover {
+            border-color: #5cb85c;
+            background: #f0f9f0;
+        }
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            background: #e8e8e8;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .upload-icon::before {
+            content: "🖼️";
+            font-size: 24px;
+        }
+        .upload-icon .plus {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            background: #1abc9c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .upload-text {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+        .upload-text strong {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .size-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .size-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 500px) {
+            .size-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        .size-btn {
+            padding: 8px 4px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            font-size: 12px;
+            color: #555;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .size-btn:hover {
+            border-color: #5cb85c;
+            color: #5cb85c;
+        }
+        .size-btn.active {
+            background: #5cb85c;
+            color: white;
+            border-color: #5cb85c;
+        }
+        .size-btn.mobile-friendly {
+            position: relative;
+        }
+        .size-btn.mobile-friendly::after {
+            content: "📱";
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            font-size: 10px;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+        .preview-header h3 {
+            font-size: 16px;
+            color: #666;
+            font-weight: 500;
+        }
+        .preview-toggle {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        .preview-toggle button {
+            padding: 6px 16px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #555;
+        }
+        .preview-toggle button.active {
+            background: #5cb85c;
+            color: white;
+            border-color: #5cb85c;
+        }
+
+        .preview-scale-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 0;
+            position: relative;
+        }
+
+        .preview-scaler {
+            transform-origin: center center;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 800px;
+            height: 600px;
+        }
+        .preview-scaler.mobile-mode {
+            width: 375px;
+            height: 812px;
+        }
+
+        .mock-site {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+            width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .mock-header {
+            height: 40px;
+            background: #2c3e50;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .mock-logo {
+            width: 80px;
+            height: 16px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        .mock-nav {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
+        }
+        .mock-nav-item {
+            width: 40px;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+        .mock-body {
+            display: flex;
+            flex: 1;
+            padding: 16px;
+            gap: 16px;
+            background: #f8f9fa;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .mock-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .mock-content.full-width {
+            width: 100%;
+        }
+        .mock-text-line {
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .mock-text-line.short { width: 60%; }
+        .mock-text-line.medium { width: 85%; }
+        .mock-sidebar {
+            width: 160px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .mock-sidebar.hidden {
+            display: none;
+        }
+        .mock-sidebar-box {
+            height: 120px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .banner-slot {
+            background: #fff3cd;
+            border: 2px dashed #ffc107;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .banner-slot .banner-ad {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .banner-slot .slot-label {
+            position: absolute;
+            font-size: 11px;
+            color: #ffc107;
+            background: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            pointer-events: none;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .banner-slot.has-ad {
+            background: transparent;
+            border: none;
+        }
+        .banner-slot.has-ad .slot-label {
+            display: none;
+        }
+
+        .slot-top {
+            margin: 0 16px;
+            padding: 12px 0;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slot-inline {
+            margin: 8px 0;
+            display: flex;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slot-sidebar {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .mock-site-mobile {
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+            width: 375px;
+            height: 812px;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .mock-site-mobile .mock-header {
+            height: 44px;
+            padding: 0 16px;
+        }
+        .mock-site-mobile .mock-logo {
+            width: 70px;
+            height: 18px;
+        }
+        .mock-site-mobile .mock-nav {
+            display: none;
+        }
+        .mock-site-mobile .mock-body {
+            flex-direction: column;
+            padding: 16px;
+            overflow: hidden;
+        }
+        .mock-site-mobile .mock-sidebar {
+            display: none;
+        }
+        .mock-site-mobile .slot-top {
+            margin: 0 16px;
+            padding: 12px 0;
+        }
+        .mock-site-mobile .slot-inline {
+            margin: 8px 0;
+            justify-content: center;
+        }
+
+        .scale-indicator {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .selfcode-area {
+            display: none;
+            margin-top: 16px;
+        }
+        .selfcode-area textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        .selfcode-area .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        .html5-upload {
+            display: none;
+            margin-top: 16px;
+        }
+        .html5-upload .upload-zone {
+            padding: 24px;
+            min-height: 150px;
+        }
+
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn-secondary {
+            background: white;
+            color: #555;
+            border: 1px solid #ccc;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-save {
+            background: #1abc9c;
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-save:hover {
+            background: #16a085;
+        }
+
+        .mobile-warning {
+            padding: 20px;
+            text-align: center;
+            color: #92400e;
+            font-size: 13px;
+            line-height: 1.6;
+            background: #fef3c7;
+            border-radius: 6px;
+            border: 1px solid #fcd34d;
+        }
+        .mobile-warning strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .mobile-warning .suggestion {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #fcd34d;
+            color: #78350f;
+        }
+        .mobile-warning .suggestion button {
+            margin: 4px;
+            padding: 6px 14px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Edit ad ID: 12345678</h1>
+        </div>
+
+        <div class="main-layout">
+            <!-- Column 1: Ad Type -->
+            <div class="card">
+                <div class="card-scrollable">
+                    <label class="type-option">
+                        <input type="radio" name="adType" value="simple" checked onchange="switchType('simple')">
+                        Simple
+                    </label>
+                    <label class="type-option">
+                        <input type="radio" name="adType" value="selfcode" onchange="switchType('selfcode')">
+                        Selfcode
+                    </label>
+                    <label class="type-option">
+                        <input type="radio" name="adType" value="html5" onchange="switchType('html5')">
+                        HTML5
+                    </label>
+
+                    <div class="selfcode-area" id="selfcodeArea">
+                        <textarea placeholder="<!-- Paste your HTML/JS code here -->"></textarea>
+                        <div class="hint">Supports HTML, CSS, JavaScript. Max 500KB.</div>
+                    </div>
+
+                    <div class="html5-upload" id="html5Area">
+                        <div class="upload-zone" onclick="document.getElementById('html5File').click()">
+                            <div class="upload-icon"><div class="plus">+</div></div>
+                            <div class="upload-text">
+                                <strong>Upload ZIP archive</strong><br>
+                                index.html + assets<br>
+                                Max 2MB
+                            </div>
+                        </div>
+                        <input type="file" id="html5File" accept=".zip" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Upload & Sizes -->
+            <div class="card">
+                <div class="card-scrollable">
+                    <div class="size-label">Select size (px)</div>
+                    <div class="size-grid" id="sizeGrid">
+                        <button class="size-btn" onclick="selectSize(this, 300, 100)">300×100</button>
+                        <button class="size-btn mobile-friendly active" onclick="selectSize(this, 300, 250)">300×250</button>
+                        <button class="size-btn" onclick="selectSize(this, 300, 600)">300×600</button>
+                        <button class="size-btn" onclick="selectSize(this, 728, 90)">728×90</button>
+                        <button class="size-btn" onclick="selectSize(this, 900, 250)">900×250</button>
+                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 250, 250)">250×250</button>
+                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 300, 50)">300×50</button>
+                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 320, 480)">320×480</button>
+                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 320, 50)">320×50</button>
+                        <button class="size-btn" onclick="selectSize(this, 160, 600)">160×600</button>
+                        <button class="size-btn" onclick="selectSize(this, 970, 250)">970×250</button>
+                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 336, 280)">336×280</button>
+                        <button class="size-btn" onclick="selectSize(this, 468, 60)">468×60</button>
+                        <button class="size-btn" onclick="selectSize(this, 120, 600)">120×600</button>
+                    </div>
+
+                    <div class="upload-zone" id="simpleUpload" onclick="document.getElementById('bannerFile').click()">
+                        <div class="upload-icon"><div class="plus">+</div></div>
+                        <div class="upload-text">
+                            <strong>JPG, PNG, GIF, SVG</strong><br>
+                            Size — 500KB maximum<br>
+                            <span id="currentSize">300×250</span>
+                        </div>
+                    </div>
+                    <input type="file" id="bannerFile" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+                </div>
+            </div>
+
+            <!-- Column 3: Preview -->
+            <div class="card">
+                <div class="preview-header">
+                    <h3>Preview</h3>
+                </div>
+                <div class="preview-toggle">
+                    <button class="active" onclick="setPreviewDevice('mobile')">📱 Mobile</button>
+                    <button onclick="setPreviewDevice('desktop')">🖥️ Desktop</button>
+                </div>
+
+                <div class="preview-scale-container" id="previewContainer">
+                    <div class="preview-scaler" id="previewScaler">
+                        <!-- Desktop -->
+                        <div class="mock-site" id="mockDesktop">
+                            <div class="mock-header">
+                                <div class="mock-logo"></div>
+                                <div class="mock-nav">
+                                    <div class="mock-nav-item"></div>
+                                    <div class="mock-nav-item"></div>
+                                    <div class="mock-nav-item"></div>
+                                </div>
+                            </div>
+                            <div class="slot-top">
+                                <div class="banner-slot" id="slotTopDesktop">
+                                    <span class="slot-label">Top Banner</span>
+                                </div>
+                            </div>
+                            <div class="mock-body">
+                                <div class="mock-content" id="mockContentDesktop">
+                                    <div class="mock-text-line"></div>
+                                    <div class="mock-text-line medium"></div>
+                                    <div class="mock-text-line short"></div>
+                                    <div class="mock-text-line"></div>
+                                    <div class="slot-inline">
+                                        <div class="banner-slot" id="slotInlineDesktop">
+                                            <span class="slot-label">Inline Banner</span>
+                                        </div>
+                                    </div>
+                                    <div class="mock-text-line medium"></div>
+                                    <div class="mock-text-line"></div>
+                                    <div class="mock-text-line short"></div>
+                                </div>
+                                <div class="mock-sidebar" id="mockSidebarDesktop">
+                                    <div class="mock-sidebar-box"></div>
+                                    <div class="banner-slot slot-sidebar" id="slotSidebarDesktop">
+                                        <span class="slot-label">Sidebar</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile -->
+                        <div class="mock-site-mobile" id="mockMobile">
+                            <div class="mock-header">
+                                <div class="mock-logo"></div>
+                                <div class="mock-nav">
+                                    <div class="mock-nav-item"></div>
+                                    <div class="mock-nav-item"></div>
+                                </div>
+                            </div>
+                            <div class="slot-top">
+                                <div class="banner-slot" id="slotTopMobile">
+                                    <span class="slot-label">Top</span>
+                                </div>
+                            </div>
+                            <div class="mock-body">
+                                <div class="mock-content">
+                                    <div class="mock-text-line"></div>
+                                    <div class="mock-text-line medium"></div>
+                                    <div class="mock-text-line short"></div>
+                                    <div class="slot-inline">
+                                        <div class="banner-slot" id="slotInlineMobile">
+                                            <span class="slot-label">Inline</span>
+                                        </div>
+                                    </div>
+                                    <div class="mock-text-line"></div>
+                                    <div class="mock-text-line medium"></div>
+                                    <div class="mock-text-line short"></div>
+                                    <div class="slot-inline">
+                                        <div class="banner-slot" id="slotBottomMobile">
+                                            <span class="slot-label">Bottom</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scale-indicator" id="scaleIndicator"></div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-secondary">💾 Save Draft</button>
+            <button class="btn-save" onclick="saveBanner()">🚀 Launch Ad</button>
+        </div>
+    </div>
+
+    <script>
+        const MOBILE_FRIENDLY_SIZES = ['300×250', '250×250', '300×50', '320×480', '320×50', '336×280'];
+        
+        let currentWidth = 300;
+        let currentHeight = 250;
+        let uploadedImage = null;
+
+        function selectSize(btn, w, h) {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentWidth = w;
+            currentHeight = h;
+            document.getElementById('currentSize').textContent = `${w}×${h}`;
+            updatePreviewPlacement();
+        }
+
+        function updatePreviewPlacement() {
+            const isMobile = document.querySelector('.preview-toggle button.active').textContent.includes('Mobile');
+            const sizeKey = `${currentWidth}×${currentHeight}`;
+            const isMobileFriendly = MOBILE_FRIENDLY_SIZES.includes(sizeKey);
+            
+            const isSkyscraper = currentHeight >= 600 && currentWidth <= 160;
+            const isLeaderboard = currentHeight <= 100 && currentWidth >= 468;
+
+            // ============================================
+            // DESKTOP SLOTS
+            // ============================================
+            const slotTop = document.getElementById('slotTopDesktop');
+            const slotInline = document.getElementById('slotInlineDesktop');
+            const slotSidebar = document.getElementById('slotSidebarDesktop');
+            const sidebar = document.getElementById('mockSidebarDesktop');
+            const content = document.getElementById('mockContentDesktop');
+
+            // Скидаємо ВСІ десктоп слоти до дефолту
+            resetSlot(slotTop, 'Top Banner');
+            resetSlot(slotInline, 'Inline Banner');
+            resetSlot(slotSidebar, 'Sidebar');
+
+            if (!isMobile) {
+                if (isSkyscraper) {
+                    sidebar.classList.remove('hidden');
+                    content.classList.remove('full-width');
+                    setSlotSize(slotSidebar, currentWidth, currentHeight);
+                    slotSidebar.querySelector('.slot-label').textContent = `Sidebar ${sizeKey}`;
+                    placeAd(slotSidebar);
+                } else if (isLeaderboard) {
+                    sidebar.classList.add('hidden');
+                    content.classList.add('full-width');
+                    setSlotSize(slotTop, currentWidth, currentHeight);
+                    slotTop.querySelector('.slot-label').textContent = `Top Banner ${sizeKey}`;
+                    placeAd(slotTop);
+                } else {
+                    sidebar.classList.add('hidden');
+                    content.classList.add('full-width');
+                    setSlotSize(slotInline, currentWidth, currentHeight);
+                    slotInline.querySelector('.slot-label').textContent = `Inline ${sizeKey}`;
+                    placeAd(slotInline);
+                }
+            }
+
+            // ============================================
+            // MOBILE SLOTS
+            // ============================================
+            const slotTopMob = document.getElementById('slotTopMobile');
+            const slotInlineMob = document.getElementById('slotInlineMobile');
+            const slotBottomMob = document.getElementById('slotBottomMobile');
+
+            // Скидаємо ВСІ мобільні слоти до дефолту
+            resetSlot(slotTopMob, 'Top');
+            resetSlot(slotInlineMob, 'Inline');
+            resetSlot(slotBottomMob, 'Bottom');
+
+            if (isMobile) {
+                if (!isMobileFriendly) {
+                    showMobileWarning(slotInlineMob, sizeKey);
+                } else if (currentHeight <= 100) {
+                    setSlotSize(slotTopMob, currentWidth, currentHeight);
+                    slotTopMob.querySelector('.slot-label').textContent = `Top ${sizeKey}`;
+                    placeAd(slotTopMob);
+                } else if (currentHeight >= 400) {
+                    setSlotSize(slotInlineMob, currentWidth, currentHeight);
+                    slotInlineMob.querySelector('.slot-label').textContent = `Inline ${sizeKey}`;
+                    placeAd(slotInlineMob);
+                } else {
+                    setSlotSize(slotBottomMob, currentWidth, currentHeight);
+                    slotBottomMob.querySelector('.slot-label').textContent = `Bottom ${sizeKey}`;
+                    placeAd(slotBottomMob);
+                }
+            }
+
+            // ============================================
+            // SCALE
+            // ============================================
+            applyScale();
+
+            // Indicator
+            const indicator = document.getElementById('scaleIndicator');
+            if (isMobile && !isMobileFriendly) {
+                indicator.textContent = `⚠️ Not recommended for mobile`;
+                indicator.style.color = '#f59e0b';
+            } else {
+                indicator.textContent = `Size: ${currentWidth}×${currentHeight}px`;
+                indicator.style.color = '#999';
+            }
+        }
+
+        function resetSlot(slot, defaultLabel) {
+            slot.classList.remove('has-ad');
+            slot.style.width = '';
+            slot.style.height = '';
+            slot.innerHTML = `<span class="slot-label">${defaultLabel}</span>`;
+        }
+
+        function setSlotSize(slot, w, h) {
+            slot.style.width = w + 'px';
+            slot.style.height = h + 'px';
+        }
+
+        function placeAd(slot) {
+            if (uploadedImage) {
+                slot.innerHTML = `<img src="${uploadedImage}" class="banner-ad" alt="Banner">`;
+                slot.classList.add('has-ad');
+            }
+        }
+
+        function applyScale() {
+            const container = document.getElementById('previewContainer');
+            const scaler = document.getElementById('previewScaler');
+            const isMobile = document.querySelector('.preview-toggle button.active').textContent.includes('Mobile');
+            
+            const baseWidth = isMobile ? 375 : 800;
+            const baseHeight = isMobile ? 812 : 600;
+            
+            const availableWidth = container.clientWidth;
+            const availableHeight = container.clientHeight;
+            
+            const scaleX = availableWidth / baseWidth;
+            const scaleY = availableHeight / baseHeight;
+            const scale = Math.min(scaleX, scaleY, 1);
+            
+            scaler.className = isMobile ? 'preview-scaler mobile-mode' : 'preview-scaler';
+            scaler.style.transform = `scale(${scale})`;
+        }
+
+        function showMobileWarning(slot, currentSize) {
+            const suggestions = MOBILE_FRIENDLY_SIZES.map(s => {
+                const [w, h] = s.split('×');
+                return `<button onclick="selectSizeFromWarning(${w}, ${h})">${s}</button>`;
+            }).join(' ');
+            
+            slot.innerHTML = `
+                <div class="mobile-warning">
+                    <strong>⚠️ ${currentSize} is not mobile-friendly</strong>
+                    This banner may not display correctly on smartphones.<br>
+                    Text and buttons could be too small to tap.
+                    <div class="suggestion">
+                        <strong>Suggested mobile sizes:</strong><br>
+                        ${suggestions}
+                    </div>
+                </div>
+            `;
+            slot.style.width = '300px';
+            slot.style.height = 'auto';
+        }
+
+        function selectSizeFromWarning(w, h) {
+            const sizeKey = `${w}×${h}`;
+            const btn = Array.from(document.querySelectorAll('.size-btn')).find(b => b.textContent === sizeKey);
+            if (btn) selectSize(btn, w, h);
+        }
+
+        function setPreviewDevice(device) {
+            const buttons = document.querySelectorAll('.preview-toggle button');
+            buttons.forEach(b => b.classList.remove('active'));
+            
+            const desktop = document.getElementById('mockDesktop');
+            const mobile = document.getElementById('mockMobile');
+
+            if (device === 'mobile') {
+                buttons[0].classList.add('active');
+                desktop.style.display = 'none';
+                mobile.style.display = 'flex';
+            } else {
+                buttons[1].classList.add('active');
+                desktop.style.display = 'flex';
+                mobile.style.display = 'none';
+            }
+            
+            // Перемальовуємо все з нуля
+            setTimeout(updatePreviewPlacement, 50);
+        }
+
+        function switchType(type) {
+            const simpleUpload = document.getElementById('simpleUpload');
+            const selfcodeArea = document.getElementById('selfcodeArea');
+            const html5Area = document.getElementById('html5Area');
+            
+            simpleUpload.style.display = 'none';
+            selfcodeArea.style.display = 'none';
+            html5Area.style.display = 'none';
+            
+            if (type === 'simple') simpleUpload.style.display = 'flex';
+            else if (type === 'selfcode') selfcodeArea.style.display = 'block';
+            else if (type === 'html5') html5Area.style.display = 'block';
+        }
+
+        function handleImageUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImage = e.target.result;
+                    updatePreviewPlacement();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveBanner() {
+            const type = document.querySelector('input[name="adType"]:checked').value;
+            const data = {
+                adId: 12345678,
+                type: type,
+                size: `${currentWidth}×${currentHeight}`
+            };
+            console.log('Banner saved:', data);
+            alert('Banner saved! Check console.');
+        }
+
+        // Init
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(applyScale, 100);
+        });
+        
+        window.addEventListener('load', () => {
+            setTimeout(updatePreviewPlacement, 100);
+        });
+    </script>
+</body>
+</html>

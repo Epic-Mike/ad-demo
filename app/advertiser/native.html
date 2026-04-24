@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advertiser — Native</title>
+    <link rel="stylesheet" href="../shared/ui.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Layout aligned with advertiser banner.html */
+        .container { max-width: 1400px; margin: 0 auto; padding: 18px; }
+        .titleBlock h1 { margin: 0; font-size: 16px; font-weight: 900; }
+        .main-layout { display: flex; gap: 16px; align-items: stretch; }
+        @media (max-width: 900px) { .main-layout { flex-direction: column; } }
+        .card {
+            background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px;
+            flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; height: 600px; overflow: hidden;
+        }
+        .card-scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin: -20px; padding: 20px; }
+        .column-heading { font-size: 13px; color: #666; margin-bottom: 10px; font-weight: 500; }
+        .required { color: #dc2626; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; color: #374151; }
+        input[type="text"], textarea, select {
+            width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; transition: all 0.2s;
+        }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #5cb85c; box-shadow: 0 0 0 2px rgba(92, 184, 92, 0.2); }
+        textarea { resize: vertical; min-height: 64px; }
+        .hint { font-size: 12px; color: #6b7280; margin-top: 2px; line-height: 1.35; }
+        .note { font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.35; }
+        .char-counter { text-align: right; font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .char-counter.warning { color: #f59e0b; }
+        .char-counter.error { color: #dc2626; }
+        .upload-zone {
+            border: 2px dashed #ccc; border-radius: 8px; padding: 28px 16px; text-align: center; cursor: pointer;
+            transition: all 0.2s; background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 132px;
+        }
+        .upload-zone:hover { border-color: #5cb85c; background: #f0f9f0; }
+        .upload-zone.compact { padding: 18px; min-height: 100px; }
+        .upload-zone .icon { font-size: 28px; margin-bottom: 8px; }
+        .upload-zone .text { font-size: 14px; font-weight: 700; color: #374151; }
+        .upload-zone .subtext { font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.6; }
+        .preview-header { text-align: center; margin-bottom: 8px; flex-shrink: 0; }
+        .preview-header h3 { font-size: 16px; color: #666; font-weight: 500; }
+        .preview-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; flex-shrink: 0; }
+        .preview-toggle button { padding: 6px 16px; border: 1px solid #ccc; background: white; border-radius: 4px; font-size: 13px; cursor: pointer; color: #555; }
+        .preview-toggle button.active { background: #5cb85c; color: white; border-color: #5cb85c; }
+        .native-preview-desktop {
+            border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: white;
+        }
+        .native-preview-desktop .preview-image {
+            width: 100%; height: 180px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;
+        }
+        .preview-image.has-image { background: #f3f4f6; }
+        .preview-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .native-preview-desktop .preview-content { padding: 16px; }
+        .native-preview-desktop .preview-sponsored {
+            font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+        }
+        .native-preview-desktop .preview-sponsored::before {
+            content: "Ad"; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 10px;
+        }
+        .native-preview-desktop .preview-title { font-size: 16px; font-weight: 800; color: #111827; margin-bottom: 8px; line-height: 1.4; }
+        .native-preview-desktop .preview-desc { font-size: 14px; color: #4b5563; margin-bottom: 12px; line-height: 1.5; }
+        .native-preview-desktop .preview-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .native-preview-desktop .preview-footer.footer-cta-only { justify-content: flex-end; }
+        .native-preview-desktop .preview-footer.footer-brand-only { justify-content: flex-start; }
+        .native-preview-desktop .preview-brand { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6b7280; }
+        .native-preview-desktop .brand-logo {
+            width: 24px; height: 24px; background: #e5e7eb; border-radius: 50%; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase;
+        }
+        .native-preview-desktop .brand-logo img, .native-preview-mobile .brand-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .native-preview-desktop .preview-cta { background: #3b82f6; color: white; padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; border: none; }
+        .native-preview-mobile {
+            display: none; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+            background: white; max-width: 280px; margin: 0 auto;
+        }
+        .native-preview-mobile .preview-image {
+            width: 100%; height: 140px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;
+        }
+        .native-preview-mobile .preview-content { padding: 12px; }
+        .native-preview-mobile .preview-sponsored {
+            font-size: 10px; color: #6b7280; text-transform: uppercase; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .native-preview-mobile .preview-sponsored::before { content: "Ad"; background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 9px; }
+        .native-preview-mobile .preview-title { font-size: 15px; font-weight: 800; color: #111827; margin-bottom: 6px; line-height: 1.3; }
+        .native-preview-mobile .preview-desc {
+            font-size: 13px; color: #4b5563; margin-bottom: 10px; line-height: 1.4; display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .native-preview-mobile .preview-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .native-preview-mobile .preview-footer.footer-cta-only { justify-content: flex-end; }
+        .native-preview-mobile .preview-footer.footer-brand-only { justify-content: flex-start; }
+        .native-preview-mobile .preview-brand { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; }
+        .native-preview-mobile .brand-logo {
+            width: 20px; height: 20px; background: #e5e7eb; border-radius: 50%; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #6b7280; text-transform: uppercase;
+        }
+        .native-preview-mobile .preview-cta { background: #3b82f6; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; border: none; }
+        @media (max-width: 768px) {
+            .native-preview-desktop { display: none; }
+            .native-preview-mobile { display: block; }
+            .preview-toggle { display: none; }
+        }
+        .actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px; }
+        .btn-save { background: var(--green-700); color: white; border: none; padding: 10px 28px; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; }
+        .btn-save:hover { background: var(--green-800); }
+        .savedNativeSelect {
+          min-width: 220px;
+          max-width: min(420px, 100%);
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          font-size: 13px;
+          font-weight: 700;
+          background: #fff;
+          color: #374151;
+          cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
+          <span class="uiAppNav-label">Pages</span>
+          <a href="../index.html">Home</a>
+          <a href="./banner.html">Banner Adv</a>
+          <a class="active" href="./native.html">Native Adv</a>
+          <a href="../publisher/banner.html">Banner Web</a>
+          <a href="../publisher/native.html">Native Web</a>
+          <a href="../demo/site.html">Demo site</a>
+        </nav>
+        <div class="uiTopbar">
+          <div class="titleBlock">
+            <h1>Advertiser — creatives</h1>
+            <div class="uiSub">
+              <a class="uiLink" href="../index.html">← Home</a> · Creatives are stored in LocalStorage
+            </div>
+          </div>
+          <div class="uiActions">
+            <label class="uiSub" style="display:inline-flex;align-items:center;gap:8px;margin:0;">
+              <span style="white-space:nowrap;">From storage:</span>
+              <select id="savedNativeSelect" class="savedNativeSelect" title="Pick a saved creative" aria-label="Saved native creatives">
+                <option value="">— Select creative —</option>
+              </select>
+            </label>
+            <button class="uiBtn" type="button" id="loadBtn">Load selected</button>
+            <button class="uiBtn" type="button" id="resetBtn">Reset storage</button>
+          </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="card">
+                <div class="card-scrollable">
+                <div class="column-heading">Essentials</div>
+
+                <div class="form-group">
+                    <label>Creative ID</label>
+                    <input type="text" id="idInput" placeholder="e.g. native-001" maxlength="40">
+                    <div class="note">You can store multiple creatives (upsert by ID).</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Headline <span class="required">*</span></label>
+                    <input type="text" id="titleInput" placeholder="Enter headline" maxlength="60">
+                    <div class="char-counter" id="titleCounter">0 / 60</div>
+                    <div class="hint">Recommended: 40–50 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="descInput" placeholder="Short offer description" maxlength="150"></textarea>
+                    <div class="char-counter" id="descCounter">0 / 150</div>
+                </div>
+
+                <div class="form-group">
+                    <label>CTA text</label>
+                    <select id="ctaInput">
+                        <option value="">No button</option>
+                        <option selected>Learn More</option>
+                        <option>Buy Now</option>
+                        <option>Visit Site</option>
+                        <option>Download</option>
+                        <option>Get Discount</option>
+                        <option>Custom text...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Brand</label>
+                    <input type="text" id="brandInput" placeholder="e.g. Nike" maxlength="30">
+                    <div class="hint">If empty, the “by …” line and brand block are hidden in the preview.</div>
+                </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-scrollable">
+                <div class="column-heading">Media</div>
+
+                <div class="form-group">
+                    <label>Main image</label>
+                    <div class="upload-zone" onclick="document.getElementById('mainImage').click()">
+                        <div class="icon">📤</div>
+                        <div class="text">Click to choose a file</div>
+                        <div class="subtext">JPG, PNG, WebP • Max 2 MB (not enforced)</div>
+                    </div>
+                    <input type="file" id="mainImage" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'main')">
+                </div>
+
+                <div class="form-group">
+                    <label>Brand logo</label>
+                    <div class="upload-zone compact" onclick="document.getElementById('logoImage').click()">
+                        <div class="icon" style="font-size: 24px;">🏷️</div>
+                        <div class="text" style="font-size: 13px;">Upload logo</div>
+                        <div class="subtext">PNG • 128×128 px • Max 100 KB (not enforced)</div>
+                    </div>
+                    <input type="file" id="logoImage" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'logo')">
+                    <div class="hint">Without a file, no logo is shown (only the brand name if you entered one).</div>
+                </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-scrollable">
+                <div class="preview-header">
+                    <h3>Preview</h3>
+                </div>
+
+                <div class="preview-toggle" id="previewToggle">
+                    <button class="active" onclick="switchPreview('desktop')">🖥️ Desktop</button>
+                    <button onclick="switchPreview('mobile')">📱 Mobile</button>
+                </div>
+
+                <div class="native-preview-desktop" id="previewDesktop">
+                    <div class="preview-image" id="desktopImage">📷 Your Image</div>
+                    <div class="preview-content">
+                        <div class="preview-sponsored" id="desktopSponsored">by <span id="desktopBrand">Brand Name</span></div>
+                        <div class="preview-title" id="desktopTitle">Your native ad headline will appear here</div>
+                        <div class="preview-desc" id="desktopDesc">Offer description will be displayed in this block. Make it compelling.</div>
+                        <div class="preview-footer" id="desktopFooter">
+                            <div class="preview-brand" id="desktopBrandRow">
+                                <div class="brand-logo" id="desktopLogoSlot"></div>
+                                <span id="desktopBrand2">Brand</span>
+                            </div>
+                            <button class="preview-cta" id="desktopCta" type="button">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="native-preview-mobile" id="previewMobile">
+                    <div class="preview-image" id="mobileImage">📷 Your Image</div>
+                    <div class="preview-content">
+                        <div class="preview-sponsored" id="mobileSponsored">by <span id="mobileBrand">Brand Name</span></div>
+                        <div class="preview-title" id="mobileTitle">Your native ad headline will appear here</div>
+                        <div class="preview-desc" id="mobileDesc">Offer description will be displayed in this block. Make it compelling.</div>
+                        <div class="preview-footer" id="mobileFooter">
+                            <div class="preview-brand" id="mobileBrandRow">
+                                <div class="brand-logo" id="mobileLogoSlot"></div>
+                                <span id="mobileBrand2">Brand</span>
+                            </div>
+                            <button class="preview-cta" id="mobileCta" type="button">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-save" type="button" onclick="saveCreative()">Save</button>
+        </div>
+    </div>
+
+    <script type="module">
+      import { StorageKeys, nowIso, uuid } from "../sdk/models.js";
+      import { readJson, writeJson, resetAll, upsertById, ensureArray } from "../sdk/storage.js";
+
+      const idInput = document.getElementById("idInput");
+      const titleInput = document.getElementById('titleInput');
+      const descInput = document.getElementById('descInput');
+      const ctaInput = document.getElementById('ctaInput');
+      const brandInput = document.getElementById('brandInput');
+      const titleCounter = document.getElementById('titleCounter');
+      const descCounter = document.getElementById('descCounter');
+      let mainImageUrl = null;
+      let logoImageUrl = null;
+
+      const desktopTitle = document.getElementById('desktopTitle');
+      const desktopDesc = document.getElementById('desktopDesc');
+      const desktopSponsored = document.getElementById('desktopSponsored');
+      const mobileSponsored = document.getElementById('mobileSponsored');
+      const desktopBrand = document.getElementById('desktopBrand');
+      const desktopBrand2 = document.getElementById('desktopBrand2');
+      const desktopBrandRow = document.getElementById('desktopBrandRow');
+      const mobileBrandRow = document.getElementById('mobileBrandRow');
+      const desktopLogoSlot = document.getElementById('desktopLogoSlot');
+      const mobileLogoSlot = document.getElementById('mobileLogoSlot');
+      const desktopFooter = document.getElementById('desktopFooter');
+      const mobileFooter = document.getElementById('mobileFooter');
+      const desktopCta = document.getElementById('desktopCta');
+      const desktopImage = document.getElementById('desktopImage');
+
+      const mobileTitle = document.getElementById('mobileTitle');
+      const mobileDesc = document.getElementById('mobileDesc');
+      const mobileBrand = document.getElementById('mobileBrand');
+      const mobileBrand2 = document.getElementById('mobileBrand2');
+      const mobileCta = document.getElementById('mobileCta');
+      const mobileImage = document.getElementById('mobileImage');
+
+      function ensureId() {
+        if (!idInput.value.trim()) idInput.value = "native-" + uuid().slice(0, 8);
+      }
+
+      function updateCounter(input, counter, max) {
+        const len = input.value.length;
+        counter.textContent = `${len} / ${max}`;
+        counter.className = 'char-counter';
+        if (len > max) counter.classList.add('error');
+        else if (len > max * 0.85) counter.classList.add('warning');
+      }
+
+      function updatePreview() {
+        const title = titleInput.value || 'Your native ad headline will appear here';
+        const desc = descInput.value || 'Offer description will be displayed in this block. Make it compelling.';
+        const brandTrim = brandInput.value.trim();
+        const hasBrand = brandTrim.length > 0;
+        const ctaRaw = ctaInput.value;
+        const hasCta = String(ctaRaw).trim().length > 0;
+
+        desktopTitle.textContent = title;
+        desktopDesc.textContent = desc;
+        mobileTitle.textContent = title;
+        mobileDesc.textContent = desc;
+
+        const sponsoredDisplay = hasBrand ? '' : 'none';
+        desktopSponsored.style.display = sponsoredDisplay;
+        mobileSponsored.style.display = sponsoredDisplay;
+        if (hasBrand) {
+          desktopBrand.textContent = brandTrim;
+          mobileBrand.textContent = brandTrim;
+          desktopBrand2.textContent = brandTrim;
+          mobileBrand2.textContent = brandTrim;
+        } else {
+          desktopBrand.textContent = '';
+          mobileBrand.textContent = '';
+          desktopBrand2.textContent = '';
+          mobileBrand2.textContent = '';
+        }
+
+        const brandRowDisplay = hasBrand ? 'flex' : 'none';
+        desktopBrandRow.style.display = brandRowDisplay;
+        mobileBrandRow.style.display = brandRowDisplay;
+
+        [desktopLogoSlot, mobileLogoSlot].forEach((slot) => {
+          if (!hasBrand) {
+            slot.innerHTML = '';
+            slot.style.display = 'none';
+            return;
+          }
+          if (logoImageUrl) {
+            slot.innerHTML = `<img src="${logoImageUrl}" alt="Brand logo">`;
+            slot.style.display = '';
+          } else {
+            slot.innerHTML = '';
+            slot.style.display = 'none';
+          }
+        });
+
+        [desktopCta, mobileCta].forEach((btn) => {
+          btn.style.display = hasCta ? '' : 'none';
+          btn.textContent = hasCta ? String(ctaRaw) : '';
+        });
+
+        [desktopFooter, mobileFooter].forEach((el) => {
+          el.classList.remove('footer-cta-only', 'footer-brand-only');
+          const showBrandFooter = hasBrand;
+          if (showBrandFooter && hasCta) {
+            /* space-between */
+          } else if (hasCta) {
+            el.classList.add('footer-cta-only');
+          } else if (showBrandFooter) {
+            el.classList.add('footer-brand-only');
+          }
+          el.style.display = showBrandFooter || hasCta ? 'flex' : 'none';
+        });
+
+        updatePreviewImages();
+      }
+
+      function updatePreviewImages() {
+        const imageMarkup = mainImageUrl ? `<img src="${mainImageUrl}" alt="Native ad image">` : '📷 Your Image';
+        [desktopImage, mobileImage].forEach((el) => {
+          el.innerHTML = imageMarkup;
+          el.classList.toggle('has-image', Boolean(mainImageUrl));
+        });
+      }
+
+      window.handleImageUpload = function (input, type) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          if (type === 'logo') logoImageUrl = e.target.result;
+          else mainImageUrl = e.target.result;
+          updatePreview();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Event listeners
+      titleInput.addEventListener('input', (e) => { updateCounter(e.target, titleCounter, 60); updatePreview(); });
+      descInput.addEventListener('input', (e) => { updateCounter(e.target, descCounter, 150); updatePreview(); });
+      ctaInput.addEventListener('change', updatePreview);
+      brandInput.addEventListener('input', updatePreview);
+
+      window.switchPreview = function (type) {
+        const desktop = document.getElementById('previewDesktop');
+        const mobile = document.getElementById('previewMobile');
+        const buttons = document.querySelectorAll('.preview-toggle button');
+        buttons.forEach(b => b.classList.remove('active'));
+        if (type === 'desktop') {
+          desktop.style.display = 'block';
+          mobile.style.display = 'none';
+          buttons[0].classList.add('active');
+        } else {
+          desktop.style.display = 'none';
+          mobile.style.display = 'block';
+          buttons[1].classList.add('active');
+        }
+      }
+
+      function currentCreative() {
+        ensureId();
+        return {
+          id: idInput.value.trim(),
+          createdAt: nowIso(),
+          title: titleInput.value.trim(),
+          description: descInput.value.trim(),
+          ctaText: ctaInput.value.trim(),
+          brandName: brandInput.value.trim(),
+          assets: { mainImageDataUrl: mainImageUrl, logoDataUrl: logoImageUrl },
+        };
+      }
+
+      window.saveCreative = function () {
+        const creative = currentCreative();
+        const existing = ensureArray(readJson(StorageKeys.nativeCreatives, []));
+        writeJson(StorageKeys.nativeCreatives, upsertById(existing, creative));
+        populateSavedNativeSelect(creative.id);
+        alert("Saved native creative to LocalStorage.");
+      }
+
+      function populateSavedNativeSelect(preferSelectId) {
+        const sel = document.getElementById("savedNativeSelect");
+        const list = ensureArray(readJson(StorageKeys.nativeCreatives, []));
+        const keep = preferSelectId != null ? String(preferSelectId) : sel.value;
+        sel.innerHTML = '<option value="">— Select creative —</option>';
+        list.forEach((c) => {
+          if (!c || c.id == null) return;
+          const opt = document.createElement("option");
+          opt.value = String(c.id);
+          const head = (c.title || "").trim() || "—";
+          const short = head.length > 36 ? `${head.slice(0, 36)}…` : head;
+          opt.textContent = `${c.id} · ${short}`;
+          sel.appendChild(opt);
+        });
+        if (keep && [...sel.options].some((o) => o.value === keep)) sel.value = keep;
+      }
+
+      function applyNativeCreativeToForm(last) {
+        idInput.value = last.id || "";
+        titleInput.value = last.title || "";
+        descInput.value = last.description || "";
+        ctaInput.value =
+          last.ctaText === "" ? "" : last.ctaText != null ? last.ctaText : "Learn More";
+        brandInput.value = last.brandName || "";
+        mainImageUrl = last.assets?.mainImageDataUrl || null;
+        logoImageUrl = last.assets?.logoDataUrl || null;
+        updateCounter(titleInput, titleCounter, 60);
+        updateCounter(descInput, descCounter, 150);
+        updatePreview();
+      }
+
+      function loadSelectedNativeIntoForm() {
+        const sel = document.getElementById("savedNativeSelect");
+        const id = sel.value;
+        const list = ensureArray(readJson(StorageKeys.nativeCreatives, []));
+        if (!list.length) return alert("No saved native creatives.");
+        if (!id) return alert("Select a creative from the list.");
+        const last = list.find((c) => String(c.id) === String(id));
+        if (!last) {
+          populateSavedNativeSelect();
+          return alert("Creative not found.");
+        }
+        applyNativeCreativeToForm(last);
+      }
+
+      document.getElementById("loadBtn").addEventListener("click", loadSelectedNativeIntoForm);
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        resetAll();
+        populateSavedNativeSelect();
+        alert("Storage cleared.");
+      });
+
+      if (window.innerWidth <= 768) window.switchPreview('mobile');
+      ensureId();
+      populateSavedNativeSelect();
+      updatePreview();
+    </script>
+</body>
+</html>
+

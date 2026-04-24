@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner Spot Configuration — Publisher</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #444;
+            line-height: 1.45;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 28px;
+        }
+        .page {
+            background: #fff;
+            border: 1px solid #cfcfcf;
+            border-radius: 6px;
+            padding: 22px;
+            min-height: 500px;
+        }
+        .page.hidden { display: none; }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #555;
+        }
+        .format-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .format-tab {
+            min-width: 104px;
+            padding: 5px 18px;
+            border: 1px solid #aaa;
+            background: #f7f7f7;
+            color: #555;
+            font-size: 13px;
+            line-height: 1;
+            text-align: center;
+            cursor: default;
+        }
+        .format-tab.active {
+            background: #39a45c;
+            border-color: #2f8f4f;
+            color: #fff;
+        }
+        .panel {
+            border: 1px solid #cfcfcf;
+            border-radius: 4px;
+            padding: 26px 28px;
+            min-height: 430px;
+        }
+        .panel-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 18px;
+        }
+        .btn {
+            border: 0;
+            border-radius: 4px;
+            padding: 8px 22px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            background: #27a84f;
+        }
+        .btn:hover { background: #208e42; }
+        .btn.secondary {
+            background: #f5f5f5;
+            color: #555;
+            border: 1px solid #bbb;
+        }
+        .btn.secondary:hover { background: #ebebeb; }
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 13px;
+        }
+        th,
+        td {
+            border: 1px solid #999;
+            padding: 6px 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        th {
+            font-weight: 600;
+            color: #555;
+            background: #fbfbfb;
+        }
+        .col-id { width: 9%; }
+        .col-name { width: 18%; }
+        .col-size { width: 14%; }
+        .col-status { width: 12%; }
+        .col-code { width: 47%; }
+        .col-actions { width: 9%; }
+        .code-cell {
+            display: grid;
+            grid-template-columns: minmax(120px, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+        }
+        .code-input {
+            width: 100%;
+            height: 24px;
+            border: 1px solid #c8c8c8;
+            border-radius: 2px;
+            padding: 3px 8px;
+            color: #777;
+            font-size: 12px;
+            text-align: center;
+            background: #fff;
+        }
+        .copy-btn {
+            border: 0;
+            background: transparent;
+            color: #15aa8b;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .copy-btn::before {
+            content: "";
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 2px solid #66d8ca;
+            border-radius: 2px;
+            margin-right: 4px;
+            vertical-align: -2px;
+        }
+        .icon-btn {
+            width: 24px;
+            height: 24px;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            color: #111;
+            font-size: 15px;
+            line-height: 24px;
+        }
+        .icon-btn:hover { color: #27a84f; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 31px;
+            height: 14px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            inset: 0;
+            cursor: pointer;
+            background: #d9d9d9;
+            border-radius: 20px;
+            transition: 0.2s;
+        }
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            left: 1px;
+            top: 1px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+            transition: 0.2s;
+        }
+        .switch input:checked + .slider {
+            background: #239277;
+        }
+        .switch input:checked + .slider::before {
+            transform: translateX(17px);
+        }
+        .form-page {
+            max-width: none;
+        }
+        .form-title {
+            margin-bottom: 30px;
+        }
+        .form-title h1 {
+            font-size: 21px;
+        }
+        .form-group {
+            margin-bottom: 17px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #555;
+        }
+        input[type="text"],
+        select {
+            width: 100%;
+            height: 30px;
+            border: 1px solid #cfcfcf;
+            border-radius: 2px;
+            padding: 4px 8px;
+            font-size: 13px;
+            color: #555;
+            background: #fff;
+        }
+        select {
+            appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, #111 50%), linear-gradient(135deg, #111 50%, transparent 50%);
+            background-position: calc(100% - 17px) 12px, calc(100% - 11px) 12px;
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
+        }
+        .radio-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #555;
+            font-size: 13px;
+        }
+        .radio-row input {
+            width: 13px;
+            height: 13px;
+            accent-color: #239277;
+        }
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 54px;
+        }
+        .save-list {
+            margin-top: 10px;
+        }
+        @media (max-width: 800px) {
+            .container { padding: 12px; }
+            .page { padding: 16px; }
+            .panel { padding: 14px; overflow-x: auto; }
+            table { min-width: 860px; }
+            h1 { font-size: 19px; }
+            .format-tab { flex: 1 1 120px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="page" id="listView">
+            <div class="header">
+                <h1>Code configuration: Banner (ID: 112345678)</h1>
+            </div>
+
+            <div class="format-tabs">
+                <div class="format-tab">Web Push</div>
+                <div class="format-tab">InPage</div>
+                <div class="format-tab">OnClick</div>
+                <div class="format-tab active">Banner</div>
+                <div class="format-tab">Native</div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-toolbar">
+                    <button class="btn" type="button" onclick="openSpotForm()">Add spot</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-name">Name</th>
+                            <th class="col-size">Banner size</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-code">HTML-code</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spotsTable"></tbody>
+                </table>
+            </div>
+
+            <button class="btn save-list" type="button" onclick="saveConfiguration()">Save</button>
+        </section>
+
+        <section class="page hidden" id="formView">
+            <div class="form-page">
+                <div class="form-title">
+                    <h1 id="formTitle">Add spot for ID: 112345678</h1>
+                </div>
+
+                <form id="spotForm" onsubmit="saveSpot(event)">
+                    <div class="form-group">
+                        <label for="spotName">Name</label>
+                        <input type="text" id="spotName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bannerSize">Banner size</label>
+                        <select id="bannerSize">
+                            <option>300x100</option>
+                            <option>300x250</option>
+                            <option>300x600</option>
+                            <option>728x90</option>
+                            <option>900x250</option>
+                            <option>970x250</option>
+                            <option>160x600</option>
+                            <option>120x600</option>
+                            <option>468x60</option>
+                            <option>320x50</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Banner mode</label>
+                        <label class="radio-row">
+                            <input type="radio" name="bannerMode" value="bright">
+                            Bright
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <label class="switch">
+                            <input type="checkbox" id="spotStatus" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn" type="submit">Save</button>
+                        <button class="btn secondary" type="button" onclick="showListView()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const siteId = 112345678;
+        let editingSpotId = null;
+        let nextSpotId = 726437;
+        const spots = [
+            { id: 726435, name: 'Spot 1', size: '300x100', status: true, mode: '' },
+            { id: 726436, name: 'Spot 2', size: '300x250', status: true, mode: '' }
+        ];
+
+        function htmlCode(spot) {
+            return `<div data-banner-id="${spot.id}"></div>`;
+        }
+
+        function renderSpots() {
+            const tbody = document.getElementById('spotsTable');
+            tbody.innerHTML = spots.map(spot => `
+                <tr>
+                    <td>${spot.id}</td>
+                    <td>${spot.name}</td>
+                    <td>${spot.size}</td>
+                    <td>
+                        <label class="switch" title="Toggle status">
+                            <input type="checkbox" ${spot.status ? 'checked' : ''} onchange="toggleSpotStatus(${spot.id}, this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                    <td>
+                        <div class="code-cell">
+                            <input class="code-input" type="text" readonly value='${htmlCode(spot)}'>
+                            <button class="copy-btn" type="button" onclick="copyHtmlCode(${spot.id})">copy HTML-code</button>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="icon-btn" type="button" title="Edit spot" onclick="openSpotForm(${spot.id})">&#9998;</button>
+                        <button class="icon-btn" type="button" title="Delete spot" onclick="deleteSpot(${spot.id})">&#128465;</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openSpotForm(spotId) {
+            editingSpotId = spotId || null;
+            const spot = spots.find(item => item.id === spotId);
+
+            document.getElementById('formTitle').textContent = editingSpotId
+                ? `Edit spot for ID: ${siteId}`
+                : `Add spot for ID: ${siteId}`;
+            document.getElementById('spotName').value = spot ? spot.name : `Spot ${spots.length + 1}`;
+            document.getElementById('bannerSize').value = spot ? spot.size : '300x100';
+            document.getElementById('spotStatus').checked = spot ? spot.status : true;
+            document.querySelector('input[name="bannerMode"][value="bright"]').checked = spot ? spot.mode === 'bright' : false;
+
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('formView').classList.remove('hidden');
+        }
+
+        function showListView() {
+            document.getElementById('formView').classList.add('hidden');
+            document.getElementById('listView').classList.remove('hidden');
+        }
+
+        function saveSpot(event) {
+            event.preventDefault();
+            const modeInput = document.querySelector('input[name="bannerMode"]:checked');
+            const data = {
+                name: document.getElementById('spotName').value.trim(),
+                size: document.getElementById('bannerSize').value,
+                status: document.getElementById('spotStatus').checked,
+                mode: modeInput ? modeInput.value : ''
+            };
+
+            if (editingSpotId) {
+                const spot = spots.find(item => item.id === editingSpotId);
+                Object.assign(spot, data);
+            } else {
+                spots.push({ id: nextSpotId++, ...data });
+            }
+
+            renderSpots();
+            showListView();
+        }
+
+        function toggleSpotStatus(spotId, status) {
+            const spot = spots.find(item => item.id === spotId);
+            if (spot) spot.status = status;
+        }
+
+        function deleteSpot(spotId) {
+            const index = spots.findIndex(item => item.id === spotId);
+            if (index !== -1) {
+                spots.splice(index, 1);
+                renderSpots();
+            }
+        }
+
+        function copyHtmlCode(spotId) {
+            const spot = spots.find(item => item.id === spotId);
+            if (!spot) return;
+
+            const code = htmlCode(spot);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code);
+            }
+        }
+
+        function saveConfiguration() {
+            console.log('Banner spots saved:', spots);
+            alert('Configuration saved! Check console for JSON.');
+        }
+
+        renderSpots();
+    </script>
+</body>
+</html>

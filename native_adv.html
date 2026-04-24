@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Native Ad — AdNetwork</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .header h1 { font-size: 20px; font-weight: 600; }
+        .badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 3 Columns */
+        .columns {
+            display: flex;
+            gap: 24px;
+            align-items: stretch;
+        }
+        @media (max-width: 1200px) {
+            .columns { flex-wrap: wrap; }
+            .card { flex: 1 1 calc(50% - 12px); }
+        }
+        @media (max-width: 768px) {
+            .columns { flex-direction: column; }
+            .card { flex: 1 1 100%; }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .required { color: #dc2626; }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .char-counter.warning { color: #f59e0b; }
+        .char-counter.error { color: #dc2626; }
+
+        /* Upload zones */
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+        .upload-zone:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .upload-zone .icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .upload-zone .text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .upload-zone .subtext {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        /* Preview toggle */
+        .preview-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .preview-toggle button {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .preview-toggle button.active {
+            background: #1f2937;
+            color: white;
+            border-color: #1f2937;
+        }
+
+        /* Desktop preview */
+        .native-preview-desktop {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            flex: 1;
+        }
+        .native-preview-desktop .preview-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        .preview-image.has-image {
+            background: #f3f4f6;
+        }
+        .preview-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .native-preview-desktop .preview-content {
+            padding: 16px;
+        }
+        .native-preview-desktop .preview-sponsored {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .native-preview-desktop .preview-sponsored::before {
+            content: "Ad";
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        .native-preview-desktop .preview-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .native-preview-desktop .preview-desc {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .native-preview-desktop .preview-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .native-preview-desktop .preview-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .native-preview-desktop .brand-logo {
+            width: 24px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+        .native-preview-desktop .brand-logo img,
+        .native-preview-mobile .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .native-preview-desktop .preview-cta {
+            background: #3b82f6;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+        }
+
+        /* Mobile preview */
+        .native-preview-mobile {
+            display: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            max-width: 280px;
+            margin: 0 auto;
+            flex: 1;
+        }
+        .native-preview-mobile .preview-image {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        .native-preview-mobile .preview-content {
+            padding: 12px;
+        }
+        .native-preview-mobile .preview-sponsored {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .native-preview-mobile .preview-sponsored::before {
+            content: "Ad";
+            background: #f3f4f6;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+        }
+        .native-preview-mobile .preview-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .native-preview-mobile .preview-desc {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .native-preview-mobile .preview-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .native-preview-mobile .preview-brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .native-preview-mobile .brand-logo {
+            width: 20px;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+        .native-preview-mobile .preview-cta {
+            background: #3b82f6;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+        }
+
+        /* Show mobile on small screens */
+        @media (max-width: 768px) {
+            .native-preview-desktop { display: none; }
+            .native-preview-mobile { display: block; }
+            .preview-toggle { display: none; }
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover { background: #f9fafb; }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>Create Native Ad</h1>
+                <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">Campaign: Summer Sale (ID: 48291)</div>
+            </div>
+            <span class="badge">Native Ad</span>
+        </div>
+
+        <!-- 3 Columns -->
+        <div class="columns">
+            <!-- Column 1: Main Info -->
+            <div class="card">
+                <div class="section-title">📋 Main Info</div>
+
+                <div class="form-group">
+                    <label>Headline <span class="required">*</span></label>
+                    <input type="text" id="titleInput" placeholder="Enter catchy headline" maxlength="60">
+                    <div class="char-counter" id="titleCounter">0 / 60</div>
+                    <div class="hint">Recommended: 40-50 characters for best CTR</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description <span class="required">*</span></label>
+                    <textarea id="descInput" placeholder="Short offer description" maxlength="150"></textarea>
+                    <div class="char-counter" id="descCounter">0 / 150</div>
+                </div>
+
+                <div class="form-group">
+                    <label>CTA Button Text <span class="required">*</span></label>
+                    <select id="ctaInput">
+                        <option>Learn More</option>
+                        <option>Buy Now</option>
+                        <option>Visit Site</option>
+                        <option>Download</option>
+                        <option>Get Discount</option>
+                        <option>Custom text...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Brand Name <span class="required">*</span></label>
+                    <input type="text" id="brandInput" placeholder="e.g. Nike" maxlength="30">
+                    <div class="hint">Displayed as "Ad by [Brand]"</div>
+                </div>
+            </div>
+
+            <!-- Column 2: Media -->
+            <div class="card">
+                <div class="section-title">🖼️ Media</div>
+
+                <div class="form-group">
+                    <label>Main Image <span class="required">*</span></label>
+                    <div class="upload-zone" onclick="document.getElementById('mainImage').click()">
+                        <div class="icon">📤</div>
+                        <div class="text">Drag & drop image here or click to browse</div>
+                        <div class="subtext">JPG, PNG, WebP • Max 2 MB</div>
+                    </div>
+                    <input type="file" id="mainImage" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'main')">
+                </div>
+
+                <div class="form-group">
+                    <label>Brand Logo</label>
+                    <div class="upload-zone" style="padding: 20px;" onclick="document.getElementById('logoImage').click()">
+                        <div class="icon" style="font-size: 24px;">🏷️</div>
+                        <div class="text" style="font-size: 13px;">Upload logo</div>
+                        <div class="subtext">PNG with transparent bg • 128×128 px • Max 100 KB</div>
+                    </div>
+                    <input type="file" id="logoImage" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'logo')">
+                    <div class="hint">If not uploaded, first letter of brand name will be shown</div>
+                </div>
+            </div>
+
+            <!-- Column 3: Live Preview -->
+            <div class="card">
+                <div class="section-title">👁️ Live Preview</div>
+
+                <!-- Toggle (hidden on mobile) -->
+                <div class="preview-toggle" id="previewToggle">
+                    <button class="active" onclick="switchPreview('desktop')">🖥️ Desktop</button>
+                    <button onclick="switchPreview('mobile')">📱 Mobile</button>
+                </div>
+
+                <!-- Desktop Preview -->
+                <div class="native-preview-desktop" id="previewDesktop">
+                    <div class="preview-image" id="desktopImage">📷 Your Image</div>
+                    <div class="preview-content">
+                        <div class="preview-sponsored">by <span id="desktopBrand">Brand Name</span></div>
+                        <div class="preview-title" id="desktopTitle">Your native ad headline will appear here</div>
+                        <div class="preview-desc" id="desktopDesc">Offer description will be displayed in this block. Make it compelling.</div>
+                        <div class="preview-footer">
+                            <div class="preview-brand">
+                                <div class="brand-logo"></div>
+                                <span id="desktopBrand2">Brand</span>
+                            </div>
+                            <button class="preview-cta" id="desktopCta">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile Preview -->
+                <div class="native-preview-mobile" id="previewMobile">
+                    <div class="preview-image" id="mobileImage">📷 Your Image</div>
+                    <div class="preview-content">
+                        <div class="preview-sponsored">by <span id="mobileBrand">Brand Name</span></div>
+                        <div class="preview-title" id="mobileTitle">Your native ad headline will appear here</div>
+                        <div class="preview-desc" id="mobileDesc">Offer description will be displayed in this block. Make it compelling.</div>
+                        <div class="preview-footer">
+                            <div class="preview-brand">
+                                <div class="brand-logo"></div>
+                                <span id="mobileBrand2">Brand</span>
+                            </div>
+                            <button class="preview-cta" id="mobileCta">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const titleInput = document.getElementById('titleInput');
+        const descInput = document.getElementById('descInput');
+        const ctaInput = document.getElementById('ctaInput');
+        const brandInput = document.getElementById('brandInput');
+        const titleCounter = document.getElementById('titleCounter');
+        const descCounter = document.getElementById('descCounter');
+        let mainImageUrl = null;
+        let logoImageUrl = null;
+
+        // Preview elements - Desktop
+        const desktopTitle = document.getElementById('desktopTitle');
+        const desktopDesc = document.getElementById('desktopDesc');
+        const desktopBrand = document.getElementById('desktopBrand');
+        const desktopBrand2 = document.getElementById('desktopBrand2');
+        const desktopCta = document.getElementById('desktopCta');
+        const desktopImage = document.getElementById('desktopImage');
+
+        // Preview elements - Mobile
+        const mobileTitle = document.getElementById('mobileTitle');
+        const mobileDesc = document.getElementById('mobileDesc');
+        const mobileBrand = document.getElementById('mobileBrand');
+        const mobileBrand2 = document.getElementById('mobileBrand2');
+        const mobileCta = document.getElementById('mobileCta');
+        const mobileImage = document.getElementById('mobileImage');
+
+        function updateCounter(input, counter, max) {
+            const len = input.value.length;
+            counter.textContent = `${len} / ${max}`;
+            counter.className = 'char-counter';
+            if (len > max) counter.classList.add('error');
+            else if (len > max * 0.85) counter.classList.add('warning');
+        }
+
+        function updatePreview() {
+            const title = titleInput.value || 'Your native ad headline will appear here';
+            const desc = descInput.value || 'Offer description will be displayed in this block. Make it compelling.';
+            const brand = brandInput.value || 'Brand Name';
+            const cta = ctaInput.value;
+
+            // Desktop
+            desktopTitle.textContent = title;
+            desktopDesc.textContent = desc;
+            desktopBrand.textContent = brand;
+            desktopBrand2.textContent = brand;
+            desktopCta.textContent = cta;
+
+            // Mobile
+            mobileTitle.textContent = title;
+            mobileDesc.textContent = desc;
+            mobileBrand.textContent = brand;
+            mobileBrand2.textContent = brand;
+            mobileCta.textContent = cta;
+
+            updatePreviewImages(brand);
+        }
+
+        function updatePreviewImages(brand) {
+            const imageMarkup = mainImageUrl ? `<img src="${mainImageUrl}" alt="Native ad image">` : '📷 Your Image';
+            [desktopImage, mobileImage].forEach(el => {
+                el.innerHTML = imageMarkup;
+                el.classList.toggle('has-image', Boolean(mainImageUrl));
+            });
+
+            const fallbackLetter = (brand || 'Brand').trim().charAt(0) || 'B';
+            const logoMarkup = logoImageUrl ? `<img src="${logoImageUrl}" alt="Brand logo">` : fallbackLetter;
+            document.querySelectorAll('.brand-logo').forEach(el => {
+                el.innerHTML = logoMarkup;
+            });
+        }
+
+        function handleImageUpload(input, type) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'logo') {
+                    logoImageUrl = e.target.result;
+                } else {
+                    mainImageUrl = e.target.result;
+                }
+                updatePreview();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Event listeners
+        titleInput.addEventListener('input', (e) => {
+            updateCounter(e.target, titleCounter, 60);
+            updatePreview();
+        });
+
+        descInput.addEventListener('input', (e) => {
+            updateCounter(e.target, descCounter, 150);
+            updatePreview();
+        });
+
+        ctaInput.addEventListener('change', updatePreview);
+        brandInput.addEventListener('input', updatePreview);
+
+        // Preview toggle
+        function switchPreview(type) {
+            const desktop = document.getElementById('previewDesktop');
+            const mobile = document.getElementById('previewMobile');
+            const buttons = document.querySelectorAll('.preview-toggle button');
+
+            buttons.forEach(b => b.classList.remove('active'));
+            
+            if (type === 'desktop') {
+                desktop.style.display = 'block';
+                mobile.style.display = 'none';
+                buttons[0].classList.add('active');
+            } else {
+                desktop.style.display = 'none';
+                mobile.style.display = 'block';
+                buttons[1].classList.add('active');
+            }
+        }
+
+        // Auto-switch to mobile preview on small screens
+        if (window.innerWidth <= 768) {
+            switchPreview('mobile');
+        }
+        updatePreview();
+    </script>
+</body>
+</html>

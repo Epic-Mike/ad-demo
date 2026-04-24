@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Віртуальний сайт — Діагностика реклами</title>
+    <link rel="stylesheet" href="../shared/ui.css" />
+    <link rel="stylesheet" href="../sdk/ad-sdk.css" />
+    <style>
+      * { box-sizing: border-box; }
+      /* Ширший стенд, щоб у desktop-вʼюпорті нормально вміщалась сітка native 4×N (стаття + сайдбар ~300px). */
+      .wrap { max-width: 1920px; margin: 0 auto; padding: 18px; }
+      .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      .btn {
+        border: 1px solid #e5e7eb; background: #fff; border-radius: 10px; padding: 8px 12px;
+        cursor: pointer; font-weight: 900; font-size: 13px;
+      }
+      .btn.primary { background: var(--green-700); color: #fff; border-color: var(--green-700); }
+      .pill {
+        display: inline-flex; gap: 6px; padding: 6px; border: 1px solid #e5e7eb; border-radius: 999px;
+        background: #fafafa;
+      }
+      .pill button {
+        border: 0; background: transparent; padding: 6px 10px; border-radius: 999px; cursor: pointer; font-weight: 900; font-size: 13px;
+        color: #374151;
+      }
+      .pill button.active { background: var(--green-700); color: #fff; }
+
+      .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 12px; margin-top: 12px; align-items: start; }
+      @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+      .panel {
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px;
+      }
+      .panel h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; }
+
+      .viewportShell {
+        background: #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        border: 1px solid #d1d5db;
+      }
+      .viewport {
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      }
+      .viewport.desktop { width: 1480px; max-width: 100%; }
+      .viewport.mobile { width: 375px; }
+      /* Перемикач Banner / Native (setAdView) */
+      .viewport .hidden { display: none !important; }
+
+      /* Fake publisher page — Times News–style (English) */
+      .demoTopBar {
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 11px;
+        padding: 6px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-family: system-ui, sans-serif;
+      }
+      .demoTopBar span { opacity: 0.9; }
+      .demoMasthead {
+        border-bottom: 3px double #0f172a;
+        background: #fff;
+        padding: 12px 16px 14px;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      .demoBrandRow {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .demoLogo {
+        font-size: clamp(1.5rem, 4vw, 2.1rem);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+        line-height: 1;
+      }
+      .demoNav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        font-family: system-ui, sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #334155;
+      }
+      .demoNav span { cursor: default; }
+      .demoNav span:hover { color: #0f172a; }
+
+      .contentWrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; padding: 20px 16px 24px; background: #f1f5f9; }
+      .contentWrap.mobile { grid-template-columns: 1fr; padding: 14px 12px 20px; }
+      .article {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 20px 22px 28px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      }
+      .demoKicker {
+        font-family: system-ui, sans-serif;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #b45309;
+        margin-bottom: 10px;
+      }
+      .demoHeadline {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.35rem, 3.2vw, 2rem);
+        font-weight: 800;
+        line-height: 1.15;
+        color: #0f172a;
+        margin: 0 0 12px;
+      }
+      .demoMeta {
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 18px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .demoMeta strong { color: #334155; }
+      .demoFigure {
+        margin: 0 0 20px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #e2e8f0;
+      }
+      .demoFigure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        vertical-align: middle;
+      }
+      .demoCaption {
+        font-family: system-ui, sans-serif;
+        font-size: 11px;
+        color: #64748b;
+        padding: 8px 10px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+      }
+      .demoBody {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 17px;
+        line-height: 1.65;
+        color: #1e293b;
+      }
+      .demoBody p { margin: 0 0 1em; }
+      .demoBody .dropCap::first-letter {
+        float: left;
+        font-size: 3.2em;
+        line-height: 0.85;
+        padding-right: 6px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .aside { background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 16px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); }
+      .asideTitle {
+        font-family: system-ui, sans-serif;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #0f172a;
+        margin: 0 0 14px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #0f172a;
+      }
+      .mostRead { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+      .mostRead li { display: grid; grid-template-columns: 72px 1fr; gap: 10px; align-items: start; }
+      .mostRead img {
+        width: 72px;
+        height: 52px;
+        object-fit: cover;
+        border-radius: 3px;
+        background: #e2e8f0;
+      }
+      .mostRead a {
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #0f172a;
+        text-decoration: none;
+      }
+      .mostRead a:hover { text-decoration: underline; }
+      .mostRead .meta { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 4px; }
+
+      .aside .bannerSlotBlock { margin-top: 16px; }
+
+      /* Довга сторінка: реклама «як у статті» — між абзацами, різна ширина */
+      .article { overflow-x: hidden; }
+      .demoSection {
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid #e2e8f0;
+      }
+      .demoSection h2 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 14px;
+        line-height: 1.25;
+      }
+      .adBreak {
+        margin: 24px 0;
+        clear: both;
+      }
+      .adBreak--tight { margin: 18px 0; }
+      .article .bannerSlot {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /*
+        Medium rectangle 300×250: однакова логіка в статті, сітці колонок і сайдбарі —
+        SDK підганяє креатив під ширину слота; слот не ширший за 300px і центрований.
+      */
+      .bannerSlot[data-banner-size="300x250"] {
+        width: 100%;
+        max-width: 300px;
+        margin-inline: auto;
+        box-sizing: border-box;
+      }
+      .demoRail {
+        display: grid;
+        gap: 20px;
+        margin: 28px 0;
+        align-items: start;
+      }
+      @media (min-width: 720px) {
+        .demoRail--sky {
+          grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
+        }
+      }
+      .demoPullQuote {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.2rem;
+        line-height: 1.45;
+        color: #334155;
+        margin: 20px 0;
+        padding: 16px 20px;
+        background: #f8fafc;
+        border-left: 4px solid #0f766e;
+      }
+
+      .bannerSlot {
+        display: grid;
+        place-items: center;
+        border: 2px dashed #f59e0b;
+        background: #fef3c7;
+        border-radius: 12px;
+        /* Не фіксуємо min-height: інакше на мобільному порожній слот лишається «як 728×90» навіть при 320×50 */
+        min-height: 0;
+        padding: 10px;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+      .bannerSlot[data-banner-id] { background: #fff3cd; }
+      .bannerSlotHint { font-size: 12px; color: #92400e; font-weight: 900; }
+
+      .inspectorRow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .inspectorRow label { display: inline-flex; gap: 8px; align-items: center; font-weight: 900; font-size: 13px; color: #374151; }
+      .inspectorRow input[type="checkbox"] { width: 16px; height: 16px; }
+      pre {
+        margin: 10px 0 0;
+        background: #0b1020;
+        color: #e5e7eb;
+        padding: 10px 12px;
+        border-radius: 12px;
+        overflow: auto;
+        max-height: 480px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .small { font-size: 12px; color: #6b7280; line-height: 1.4; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="uiAppNav" aria-label="Сторінки діагностичного стенду">
+        <span class="uiAppNav-label">Сторінки</span>
+        <a href="../index.html">Головна</a>
+        <a href="../advertiser/banner.html">Banner Adv</a>
+        <a href="../advertiser/native.html">Native Adv</a>
+        <a href="../publisher/banner.html">Banner Web</a>
+        <a href="../publisher/native.html">Native Web</a>
+        <a class="active" href="./site.html">Демо сайт</a>
+      </nav>
+      <div class="uiTopbar">
+        <div>
+          <h1>Віртуальний вебсайт</h1>
+          <div class="uiSub">
+            <a class="uiLink" href="../index.html">← Головна</a> · Відтворення Banner + Native із LocalStorage через SDK
+          </div>
+          <div class="uiTabs" style="margin-top:10px;">
+            <button class="uiTab active" type="button" id="showAllBtn">Banner + Native</button>
+            <button class="uiTab" type="button" id="showBannerBtn">Лише Banner</button>
+            <button class="uiTab" type="button" id="showNativeBtn">Лише Native</button>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="pill" role="group" aria-label="Device toggle">
+            <button type="button" id="desktopBtn">Desktop</button>
+            <button type="button" id="mobileBtn">Mobile</button>
+          </div>
+          <button class="btn" type="button" id="renderBtn">Render now</button>
+          <button class="btn primary" type="button" id="seedBtn">Заповнити демо-даними</button>
+          <button class="btn" type="button" id="resetBtn">Reset storage</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="panel">
+          <h2>Viewport</h2>
+          <div class="viewportShell">
+            <div id="viewport" class="viewport desktop" lang="en">
+              <div class="demoTopBar">
+                <span><strong>LIVE</strong> · Markets steady as regulators review new climate disclosure rules</span>
+                <span>April 23, 2026 · London</span>
+              </div>
+              <header class="demoMasthead">
+                <div class="demoBrandRow">
+                  <div class="demoLogo">Times News</div>
+                  <nav class="demoNav" aria-label="Sections">
+                    <span>World</span>
+                    <span>U.S.</span>
+                    <span>Business</span>
+                    <span>Tech</span>
+                    <span>Opinion</span>
+                  </nav>
+                </div>
+              </header>
+
+              <div id="contentWrap" class="contentWrap">
+                <article class="article">
+                  <div class="bannerSlotBlock" data-banner-slot-block>
+                    <div class="bannerSlot" data-banner-id="726435" data-banner-size="728x90">
+                      <div class="bannerSlotHint">data-banner-id="726435" · пріоритети розмірів у плейсменті (flex)</div>
+                    </div>
+                  </div>
+
+                  <p class="demoKicker">Climate &amp; Policy</p>
+                  <h1 class="demoHeadline">Coastal cities accelerate sea-wall plans after record surge season</h1>
+                  <p class="demoMeta">
+                    <strong>By Eleanor Whitaker</strong> · Climate correspondent ·
+                    <time datetime="2026-04-23">April 23, 2026</time> · 5 min read
+                  </p>
+
+                  <figure class="demoFigure">
+                    <img
+                      src="https://picsum.photos/seed/timesnews-hero/960/540"
+                      width="960"
+                      height="540"
+                      alt="Storm clouds over a coastal city waterfront"
+                      loading="lazy"
+                    />
+                    <figcaption class="demoCaption">
+                      Workers reinforce a harbour embankment at dawn. Officials say funding gaps remain for low-lying districts.
+                    </figcaption>
+                  </figure>
+
+                  <div class="demoBody">
+                    <p class="dropCap">
+                      Officials in more than a dozen port cities said they would move forward with upgraded flood barriers this
+                      year, even as national budgets tighten and insurers retreat from high-risk shorelines.
+                    </p>
+                    <p>
+                      The announcements follow a winter in which several regions recorded their highest storm surges in decades.
+                      Engineers emphasise that concrete walls alone will not suffice: wetlands restoration, managed retreat in the
+                      most exposed blocks, and tighter building codes are all part of the packages now under debate.
+                    </p>
+                    <p>
+                      Hydrologists briefing municipal cabinets this quarter repeated a familiar refrain: the “100-year” flood
+                      line is a statistical snapshot, not a promise. When sea levels rise and storms intensify, the same coastline
+                      can see multiple exceedances within a single decade. That uncertainty complicates bond covenants, insurance
+                      renewals, and the politics of telling homeowners their street is now in a different risk tier.
+                    </p>
+                  </div>
+
+                  <div class="bannerSlotBlock adBreak" data-banner-slot-block>
+                    <div class="bannerSlot" data-banner-id="726436" data-banner-size="300x250">
+                      <div class="bannerSlotHint">data-banner-id="726436" · data-banner-size="300x250"</div>
+                    </div>
+                  </div>
+
+                  <div class="demoBody">
+                    <p>
+                      Critics warn that timelines are still too slow for the warming trajectory scientists describe. Municipal
+                      leaders counter that procurement and environmental reviews cannot be skipped without courting legal
+                      challenges — a tension likely to surface in hearings later this spring.
+                    </p>
+                    <p>
+                      Meanwhile, bond markets are watching. A handful of cities have piloted “resilience” bonds to spread costs
+                      across twenty-year horizons; rating agencies say disclosure of flood exposure will weigh more heavily in
+                      future reviews.
+                    </p>
+                  </div>
+
+                  <div class="bannerSlotBlock adBreak adBreak--tight" data-banner-slot-block>
+                    <div class="bannerSlot" data-banner-id="726438" data-banner-size="468x60">
+                      <div class="bannerSlotHint">data-banner-id="726438" · між абзацами, «органічно» в тексті</div>
+                    </div>
+                  </div>
+
+                  <section class="demoSection" aria-labelledby="sec-bonds">
+                    <h2 id="sec-bonds">Disclosure, debt, and the shape of the balance sheet</h2>
+                    <div class="demoBody">
+                      <p>
+                        Treasurers in mid-sized ports describe a paperwork avalanche: GIS layers, scenario tables, and
+                        third-party engineering letters that must be refreshed whenever a levee segment is upgraded. Investors
+                        want comparability; cities want flexibility. The compromise, for now, is footnotes — long ones — and
+                        supplemental PDFs that few retail readers open.
+                      </p>
+                      <p>
+                        Some underwriters quietly prefer that ambiguity. A narrowly worded prospectus can age badly if a storm
+                        arrives early. Others argue the opposite: vague language invites litigation after the fact. The net effect
+                        is longer documents, more billable hours, and slower closings — which, in construction season, can mean
+                        another winter without tie-backs poured.
+                      </p>
+                    </div>
+                  </section>
+
+                  <div class="bannerSlotBlock adBreak" data-banner-slot-block>
+                    <div class="bannerSlot" data-banner-id="726439" data-banner-size="728x90">
+                      <div class="bannerSlotHint">data-banner-id="726439" · широкий блок посеред довгого матеріалу</div>
+                    </div>
+                  </div>
+
+                  <div data-native-slot-block class="adBreak">
+                    <div data-native-widget data-native-widget-id="112345678"></div>
+                  </div>
+
+                  <section class="demoSection" aria-labelledby="sec-voices">
+                    <h2 id="sec-voices">Voices from the waterfront</h2>
+                    <div class="demoBody">
+                      <p>
+                        In interviews, residents along the affected waterfronts described a mix of urgency and fatigue: public
+                        meetings stretch late into the evening, and small-business owners fear disruption during construction
+                        seasons. City halls are promising staggered work zones and night shifts where noise ordinances allow.
+                      </p>
+                      <p class="demoPullQuote">
+                        “We are not against the wall,” said one harbour restaurateur. “We are against losing a season we cannot
+                        get back because nobody coordinated the cranes.”
+                      </p>
+                      <p>
+                        Tenant unions in two cities have asked for rent abatement during pile-driving windows; insurers, so far,
+                        have been non-committal. Legal scholars note that climate adaptation is rewriting informal norms faster
+                        than statutes: what counts as “reasonable notice” when a forecast shifts in forty-eight hours?
+                      </p>
+                      <p>
+                        Photographers working the morning tide documented temporary barriers stacked with sandbags — a stopgap
+                        aesthetic that has become oddly familiar on social feeds. Officials stress these are not substitutes for
+                        engineered defences, but residents read the images as a thermometer of confidence.
+                      </p>
+                    </div>
+                  </section>
+
+                  <div class="demoRail demoRail--sky">
+                    <div class="demoBody" style="margin:0;">
+                      <p>
+                        Procurement teams say the hardest conversations are not with contractors but with finance: capital plans
+                        assume steady interest rates and predictable seasons, while adaptation projects assume the opposite. The
+                        mismatch shows up in cash-flow models long before concrete arrives on site.
+                      </p>
+                      <p>
+                        In one harbour district, shopkeepers have started mapping alternate delivery routes for the months when
+                        cranes will block the usual quay. It is a small example of how adaptation ripples through economies that
+                        rarely appear in headline budgets.
+                      </p>
+                    </div>
+                    <div class="bannerSlotBlock" data-banner-slot-block style="margin:0;">
+                      <div class="bannerSlot" data-banner-id="726440" data-banner-size="160x600">
+                        <div class="bannerSlotHint">data-banner-id="726440"</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bannerSlotBlock adBreak" data-banner-slot-block>
+                    <div class="bannerSlot" data-banner-id="726441" data-banner-size="970x250">
+                      <div class="bannerSlotHint">data-banner-id="726441" · гнучкі розміри можна задати в Banner Web</div>
+                    </div>
+                  </div>
+
+                  <div data-native-slot-block class="adBreak">
+                    <div data-native-widget data-native-widget-id="112345680"></div>
+                  </div>
+
+                  <section class="demoSection" aria-labelledby="sec-next">
+                    <h2 id="sec-next">What happens in committee this month</h2>
+                    <div class="demoBody">
+                      <p>
+                        Drafters are circulating language that would tie capital grants to maintenance schedules — a response to
+                        headline projects that opened on time but starved for upkeep. Whether that survives markup is an open
+                        question; trade associations warn of unfunded mandates, while activists say unfunded pride is worse.
+                      </p>
+                      <p>
+                        Separately, a cross-border working group will compare levee inspection intervals. Harmonisation sounds
+                        dull until you realise a freight terminal on one side of a river answered to a different cadence than its
+                        mirror image downstream. Auditors have begun asking why.
+                      </p>
+                    </div>
+                  </section>
+
+                  <div data-native-slot-block class="adBreak">
+                    <div data-native-widget data-native-widget-id="112345679"></div>
+                  </div>
+
+                  <div id="dynamicInventoryBannerHost" hidden></div>
+                  <div id="dynamicInventoryNativeHost" hidden></div>
+                </article>
+
+                <aside id="aside" class="aside">
+                  <h2 class="asideTitle">Most read</h2>
+                  <ul class="mostRead">
+                    <li>
+                      <img src="https://picsum.photos/seed/tn-side1/144/104" width="144" height="104" alt="" loading="lazy" />
+                      <div>
+                        <a href="#">Senate panel sets date for hearings on grid modernization bill</a>
+                        <div class="meta">Politics · 2h ago</div>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="https://picsum.photos/seed/tn-side2/144/104" width="144" height="104" alt="" loading="lazy" />
+                      <div>
+                        <a href="#">Eurozone inflation cools; core measure still above target</a>
+                        <div class="meta">Business · 4h ago</div>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="https://picsum.photos/seed/tn-side3/144/104" width="144" height="104" alt="" loading="lazy" />
+                      <div>
+                        <a href="#">Arctic research team reports thinner late-winter ice than models predicted</a>
+                        <div class="meta">Science · 6h ago</div>
+                      </div>
+                    </li>
+                    <li>
+                      <img src="https://picsum.photos/seed/tn-side4/144/104" width="144" height="104" alt="" loading="lazy" />
+                      <div>
+                        <a href="#">Premier League: title race goes to final fixtures after late equalizer</a>
+                        <div class="meta">Sports · 8h ago</div>
+                      </div>
+                    </li>
+                  </ul>
+
+                  <div class="bannerSlotBlock" data-banner-slot-block>
+                    <div class="bannerSlot" data-banner-id="726437" data-banner-size="300x250">
+                      <div class="bannerSlotHint">data-banner-id="726437" · сайдбар</div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Інспектор</h2>
+          <div class="inspectorRow">
+            <label><input id="debugToggle" type="checkbox" />Показувати причини (debug)</label>
+            <span class="small">У банерних слотах при увімкненому debug текст причин може бути в жовтих плейсментах. Якщо немає native-креативів, у слоті показується підпис; для колоночного плейсмента додаються розміри сітки desktop/mobile у дужках, наприклад <code>(3×1/1×3)</code>.</span>
+          </div>
+          <div class="inspectorRow" style="margin-top:8px;">
+            <label><input id="emptyToggle" type="checkbox" />Показувати порожні плейсменти</label>
+            <span class="small">Якщо вимкнено — плейсменти без реклами/налаштувань будуть приховані.</span>
+          </div>
+          <pre id="inspectOut">{}</pre>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { StorageKeys, nowIso, uuid } from "../sdk/models.js";
+      import {
+        migrateIfNeeded,
+        readJson,
+        writeJson,
+        resetAll,
+        ensureArray,
+        cloneJson,
+      } from "../sdk/storage.js";
+      import {
+        DEMO_NATIVE_WIDGET_SPECS,
+        defaultNativeWidgetSettings,
+        nativeGrid3SettingsFrom,
+      } from "../sdk/native-demo-defaults.js";
+      import { renderAll } from "../sdk/ad-sdk.js";
+
+      migrateIfNeeded();
+
+      const viewport = document.getElementById("viewport");
+      const contentWrap = document.getElementById("contentWrap");
+      const desktopBtn = document.getElementById("desktopBtn");
+      const mobileBtn = document.getElementById("mobileBtn");
+      const inspectOut = document.getElementById("inspectOut");
+      const debugToggle = document.getElementById("debugToggle");
+      const emptyToggle = document.getElementById("emptyToggle");
+
+      const showAllBtn = document.getElementById("showAllBtn");
+      const showBannerBtn = document.getElementById("showBannerBtn");
+      const showNativeBtn = document.getElementById("showNativeBtn");
+
+      function setRuntime(patch) {
+        const curr = readJson(StorageKeys.runtime, { device: "desktop", debug: true });
+        const next = { ...curr, ...patch };
+        writeJson(StorageKeys.runtime, next);
+        return next;
+      }
+
+      function applyDevice(device) {
+        const runtime = setRuntime({ device });
+        viewport.classList.toggle("desktop", runtime.device === "desktop");
+        viewport.classList.toggle("mobile", runtime.device === "mobile");
+        contentWrap.classList.toggle("mobile", runtime.device === "mobile");
+        desktopBtn.classList.toggle("active", runtime.device === "desktop");
+        mobileBtn.classList.toggle("active", runtime.device === "mobile");
+      }
+
+      function seed() {
+        // Same seed as index.html (keep it here for convenience)
+        writeJson(StorageKeys.bannerCreatives, [
+          { id: "banner-" + uuid(), createdAt: nowIso(), type: "simple", size: "300x250", assets: { imageDataUrl: null } },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "728x90",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:900 18px system-ui;background:#111827;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">Selfcode 728x90</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "320x50",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 13px system-ui;background:#0f766e;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">Mobile 320×50</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "468x60",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 14px system-ui;background:#7c3aed;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">468×60</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "160x600",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:700 15px system-ui;writing-mode:vertical-rl;text-orientation:mixed;background:#0369a1;color:white;text-decoration:none;padding:8px}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">160×600</a></body></html>`,
+            },
+          },
+          {
+            id: "banner-" + uuid(),
+            createdAt: nowIso(),
+            type: "selfcode",
+            size: "970x250",
+            assets: {
+              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:900 22px system-ui;background:#14532d;color:#ecfccb;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">970×250</a></body></html>`,
+            },
+          },
+        ]);
+        writeJson(StorageKeys.bannerSpots, [
+          {
+            id: 726435,
+            name: "Top Leaderboard",
+            size: "728x90",
+            status: true,
+            mode: "",
+            flexSizes: {
+              desktop: ["728x90", "970x250"],
+              mobile: ["320x50", "300x250"],
+              breakpoint: 600,
+            },
+          },
+          { id: 726436, name: "Inline Rect", size: "300x250", status: true, mode: "" },
+          { id: 726437, name: "Sidebar", size: "300x250", status: true, mode: "" },
+          { id: 726438, name: "In-article strip", size: "468x60", status: true, mode: "" },
+          { id: 726439, name: "Mid article LDB", size: "728x90", status: true, mode: "" },
+          { id: 726440, name: "Rail skyscraper", size: "160x600", status: true, mode: "" },
+          {
+            id: 726441,
+            name: "Article mega",
+            size: "970x250",
+            status: true,
+            mode: "",
+            flexSizes: {
+              desktop: ["970x250", "728x90"],
+              mobile: ["300x250", "320x50"],
+              breakpoint: 600,
+            },
+          },
+        ]);
+        writeJson(StorageKeys.nativeCreatives, [
+          {
+            id: "native-" + uuid(),
+            createdAt: nowIso(),
+            title: "Summer sale: up to 50% off",
+            description: "Limited time offer. Browse deals and save on bestsellers.",
+            ctaText: "Learn More",
+            brandName: "Brand",
+            assets: { mainImageDataUrl: null, logoDataUrl: null },
+          },
+          {
+            id: "native-" + uuid(),
+            createdAt: nowIso(),
+            title: "Weekend reads bundle",
+            description: "Editors pick long-form reporting and analysis you may have missed.",
+            ctaText: "Browse",
+            brandName: "Times Books",
+            assets: { mainImageDataUrl: null, logoDataUrl: null },
+          },
+          {
+            id: "native-" + uuid(),
+            createdAt: nowIso(),
+            title: "Member perks · audio edition",
+            description: "Listen to articles offline. New narrations every weekday morning.",
+            ctaText: "Try free",
+            brandName: "Times Audio",
+            assets: { mainImageDataUrl: null, logoDataUrl: null },
+          },
+        ]);
+        const defaultSettings = readJson(StorageKeys.nativeWidgetSettings, null) || defaultNativeWidgetSettings();
+        const grid3Settings = nativeGrid3SettingsFrom(defaultSettings);
+        writeJson(
+          StorageKeys.nativeWidgets,
+          DEMO_NATIVE_WIDGET_SPECS.map((spec) => ({
+            id: spec.id,
+            name: spec.name,
+            status: true,
+            settings: cloneJson(spec.grid3 ? grid3Settings : defaultSettings),
+          })),
+        );
+        writeJson(StorageKeys.nativeWidgetSettings, cloneJson(defaultSettings));
+        renderNow();
+      }
+
+      function syncDynamicBannerSlots() {
+        const host = document.getElementById("dynamicInventoryBannerHost");
+        if (!host) return;
+        host.innerHTML = "";
+        host.hidden = true;
+
+        const spots = ensureArray(readJson(StorageKeys.bannerSpots, []));
+        const staticIds = new Set();
+        const layoutRoot = viewport.querySelector("#contentWrap") || viewport;
+        layoutRoot.querySelectorAll("[data-banner-id]").forEach((el) => {
+          if (host.contains(el)) return;
+          const id = el.getAttribute("data-banner-id");
+          if (id) staticIds.add(String(id));
+        });
+        const extras = spots.filter(
+          (s) => s && s.id != null && s.status !== false && !staticIds.has(String(s.id)),
+        );
+        if (!extras.length) return;
+
+        const block = document.createElement("div");
+        block.className = "bannerSlotBlock";
+        block.setAttribute("data-banner-slot-block", "");
+        for (const s of extras) {
+          const wrap = document.createElement("div");
+          wrap.className = "bannerSlot";
+          wrap.setAttribute("data-banner-id", String(s.id));
+          if (s.size) wrap.setAttribute("data-banner-size", String(s.size));
+          block.appendChild(wrap);
+        }
+        host.appendChild(block);
+        host.hidden = false;
+
+        const adView = readJson(StorageKeys.runtime, {}).adView || "all";
+        block.classList.toggle("hidden", adView === "native");
+      }
+
+      function syncDynamicNativeSlots() {
+        const host = document.getElementById("dynamicInventoryNativeHost");
+        if (!host) return;
+        host.innerHTML = "";
+        host.hidden = true;
+
+        const placements = ensureArray(readJson(StorageKeys.nativeWidgets, []));
+        const staticIds = new Set();
+        const layoutRoot = viewport.querySelector("#contentWrap") || viewport;
+        layoutRoot.querySelectorAll("[data-native-widget]").forEach((el) => {
+          if (host.contains(el)) return;
+          const id = el.getAttribute("data-native-widget-id");
+          if (id) staticIds.add(String(id));
+        });
+        const extras = placements.filter(
+          (w) => w && w.id != null && w.status !== false && !staticIds.has(String(w.id)),
+        );
+        if (!extras.length) return;
+
+        const block = document.createElement("div");
+        block.setAttribute("data-native-slot-block", "");
+        block.className = "adBreak";
+        for (const w of extras) {
+          const wrap = document.createElement("div");
+          wrap.className = "adBreak";
+          const slot = document.createElement("div");
+          slot.setAttribute("data-native-widget", "");
+          slot.setAttribute("data-native-widget-id", String(w.id));
+          wrap.appendChild(slot);
+          block.appendChild(wrap);
+        }
+        host.appendChild(block);
+        host.hidden = false;
+
+        const adView = readJson(StorageKeys.runtime, {}).adView || "all";
+        block.classList.toggle("hidden", adView === "banner");
+      }
+
+      function renderNow() {
+        syncDynamicBannerSlots();
+        syncDynamicNativeSlots();
+        const runtime = readJson(StorageKeys.runtime, { device: "desktop", debug: true });
+        const debug = Boolean(runtime.debug);
+        const showEmptyPlacements = Boolean(runtime.showEmptyPlacements);
+        const viewportWidth = viewport.getBoundingClientRect().width;
+        const result = renderAll(viewport, {
+          debug,
+          viewportWidth,
+          showEmptyPlacements,
+          showPlacementIdBadge: true,
+        });
+        const snapshot = {
+          runtime,
+          storage: {
+            bannerCreatives: (readJson(StorageKeys.bannerCreatives, []) || []).length,
+            bannerSpots: (readJson(StorageKeys.bannerSpots, []) || []).length,
+            nativeCreatives: (readJson(StorageKeys.nativeCreatives, []) || []).length,
+            nativeWidgets: (readJson(StorageKeys.nativeWidgets, []) || []).length,
+          },
+          render: result,
+        };
+        inspectOut.textContent = JSON.stringify(snapshot, null, 2);
+      }
+
+      function setAdView(mode) {
+        const setActive = (btn, active) => btn.classList.toggle("active", active);
+        setActive(showAllBtn, mode === "all");
+        setActive(showBannerBtn, mode === "banner");
+        setActive(showNativeBtn, mode === "native");
+        viewport.querySelectorAll("[data-banner-slot-block]").forEach((el) => {
+          el.classList.toggle("hidden", mode === "native");
+        });
+        viewport.querySelectorAll("[data-native-slot-block]").forEach((el) => {
+          el.classList.toggle("hidden", mode === "banner");
+        });
+        setRuntime({ adView: mode });
+      }
+
+      desktopBtn.addEventListener("click", () => { applyDevice("desktop"); renderNow(); });
+      mobileBtn.addEventListener("click", () => { applyDevice("mobile"); renderNow(); });
+      document.getElementById("renderBtn").addEventListener("click", renderNow);
+      document.getElementById("seedBtn").addEventListener("click", seed);
+      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); renderNow(); alert("Сховище очищено."); });
+
+      debugToggle.addEventListener("change", (e) => {
+        setRuntime({ debug: e.target.checked });
+        renderNow();
+      });
+
+      emptyToggle.addEventListener("change", (e) => {
+        setRuntime({ showEmptyPlacements: e.target.checked });
+        renderNow();
+      });
+
+      // init
+      const rt = readJson(StorageKeys.runtime, { device: "desktop", debug: true });
+      debugToggle.checked = Boolean(rt.debug);
+      emptyToggle.checked = Boolean(rt.showEmptyPlacements ?? true);
+      if (rt.showEmptyPlacements == null) setRuntime({ showEmptyPlacements: true });
+      applyDevice(rt.device === "mobile" ? "mobile" : "desktop");
+      setAdView(rt.adView || "all");
+      renderNow();
+
+      showAllBtn.addEventListener("click", () => { setAdView("all"); renderNow(); });
+      showBannerBtn.addEventListener("click", () => { setAdView("banner"); renderNow(); });
+      showNativeBtn.addEventListener("click", () => { setAdView("native"); renderNow(); });
+    </script>
+  </body>
+</html>
+
