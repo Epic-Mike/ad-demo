@@ -70,5 +70,5 @@ export function nativeGrid3SettingsFrom(base) {
 export const DEMO_NATIVE_WIDGET_SPECS = [
   { id: 112345678, name: "Native widget 1", grid3: false },
   { id: 112345679, name: "Native widget 2", grid3: false },
-  { id: 112345680, name: "Native сітка 3×1 / 1×3", grid3: true },
+  { id: 112345680, name: "Native grid 3×1 / 1×3", grid3: true },
 ];

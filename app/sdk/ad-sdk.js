@@ -121,7 +121,7 @@ function flexEmptyDebugText(slotEl, spot, tier, viewportWidth) {
   const labels = list.map((s) => s.replace(/x/g, "×")).join(", ") || "—";
   const bp = Number(spot?.flexSizes?.breakpoint ?? 600);
   const w = Number.isFinite(viewportWidth) ? Math.round(viewportWidth) : "?";
-  return `Плейсмент ${spot?.id ?? "?"} (flex · ${tier}, breakpoint ${bp}px, viewport ~${w}px; очікуються: ${labels}): немає відповідного креативу`;
+  return `Placement ${spot?.id ?? "?"} (flex · ${tier}, breakpoint ${bp}px, viewport ~${w}px; expected: ${labels}): no matching creative`;
 }
 
 /** Розмір для підказок debug: з плейсменту або з data-banner-size на слоті (на кшталт 728×90). */
@@ -214,7 +214,7 @@ function renderBannerIntoSlot(slotEl, creative, spot, opts) {
       slotEl.appendChild(
         el("div", {
           class: "adDiag-slotEmpty",
-          text: `Плейсмент ${spot?.id ?? "?"} (${bannerDimLabel(slotEl, spot)}): немає креативу з відповідним розміром`,
+          text: `Placement ${spot?.id ?? "?"} (${bannerDimLabel(slotEl, spot)}): no creative matching this size`,
         }),
       );
     }
@@ -273,7 +273,7 @@ function renderBannerIntoSlot(slotEl, creative, spot, opts) {
     slotEl.appendChild(
       el("div", {
         class: "adDiag-html5Stub",
-        text: `HTML5 ZIP завантажено (${creative.assets?.fileName || "невідомо"})`,
+        text: `HTML5 ZIP loaded (${creative.assets?.fileName || "unknown"})`,
       }),
     );
     appendPlacementIdBadge(slotEl, spot?.id, opts);
@@ -281,7 +281,7 @@ function renderBannerIntoSlot(slotEl, creative, spot, opts) {
   }
 
   if (debugEnabled(opts)) {
-    slotEl.appendChild(el("div", { class: "adDiag-slotEmpty", text: "Невідомий тип банера" }));
+    slotEl.appendChild(el("div", { class: "adDiag-slotEmpty", text: "Unknown banner type" }));
   }
   return { ok: false, reason: "unknown_banner_type" };
 }
@@ -318,7 +318,7 @@ export function renderBannerSlots(root = document, opts = {}) {
         slotEl.appendChild(
           el("div", {
             class: "adDiag-slotEmpty",
-            text: `Плейсмент ${spotId} (${formatDimsLabel(dims)}): не налаштовано`,
+            text: `Placement ${spotId} (${formatDimsLabel(dims)}): not configured`,
           }),
         );
         applyEmptyBannerSlotLayout(slotEl, dims, viewportWidth);
@@ -368,7 +368,7 @@ export function renderBannerSlots(root = document, opts = {}) {
         const dims = resolveEmptySlotDims(slotEl, opts, viewportWidth, spot, tier);
         const text = hasFlexSizes(spot)
           ? flexEmptyDebugText(slotEl, spot, tier, viewportWidth)
-          : `Плейсмент ${spot.id} (${formatDimsLabel(dims)}): немає креативу з відповідним розміром`;
+          : `Placement ${spot.id} (${formatDimsLabel(dims)}): no creative matching this size`;
         slotEl.appendChild(el("div", { class: "adDiag-slotEmpty", text }));
         applyEmptyBannerSlotLayout(slotEl, dims, viewportWidth);
       }
@@ -425,7 +425,7 @@ function isNativeColumnarPlacement(settings) {
 }
 
 function nativeNoCreativesEmptyText(placementId, settings) {
-  let text = `Native-плейсмент ${placementId}: немає native-креативів`;
+  let text = `Native placement ${placementId}: no native creatives`;
   if (settings && isNativeColumnarPlacement(settings)) {
     const { dc, dr, mc, mr } = nativeDesktopMobileGridDims(settings);
     text += ` (${dc}×${dr}/${mc}×${mr})`;

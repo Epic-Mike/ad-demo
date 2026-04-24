@@ -432,7 +432,7 @@
                             <label>Description Color</label>
                             <div class="color-input-wrapper">
                                 <input type="text" value="rgba(102,102,102,1)" id="descColor">
-                                <input type="color" class="color-picker-native" data-color-for="descColor" value="#666666" title="Обрати колір" aria-label="Колір опису" />
+                                <input type="color" class="color-picker-native" data-color-for="descColor" value="#666666" title="Pick color" aria-label="Description color" />
                             </div>
                         </div>
                         <div class="form-group">
@@ -501,14 +501,14 @@
                             <label>Button Text Color</label>
                             <div class="color-input-wrapper">
                                 <input type="text" value="rgba(255,255,255,1)" id="ctaTextColor">
-                                <input type="color" class="color-picker-native" data-color-for="ctaTextColor" value="#ffffff" title="Обрати колір" aria-label="Колір тексту кнопки" />
+                                <input type="color" class="color-picker-native" data-color-for="ctaTextColor" value="#ffffff" title="Pick color" aria-label="Button text color" />
                             </div>
                         </div>
                         <div class="form-group">
                             <label>Button Hover Background</label>
                             <div class="color-input-wrapper">
                                 <input type="text" value="rgba(37,99,235,1)" id="ctaHoverBg">
-                                <input type="color" class="color-picker-native" data-color-for="ctaHoverBg" value="#2563eb" title="Обрати колір" aria-label="Колір кнопки при наведенні" />
+                                <input type="color" class="color-picker-native" data-color-for="ctaHoverBg" value="#2563eb" title="Pick color" aria-label="Button hover background" />
                             </div>
                         </div>
                         <div class="two-col">
@@ -534,7 +534,7 @@
                             <label>Label Color</label>
                             <div class="color-input-wrapper">
                                 <input type="text" value="rgba(153,153,153,1)" id="labelColor">
-                                <input type="color" class="color-picker-native" data-color-for="labelColor" value="#999999" title="Обрати колір" aria-label="Колір мітки Ads" />
+                                <input type="color" class="color-picker-native" data-color-for="labelColor" value="#999999" title="Pick color" aria-label="Ads label color" />
                             </div>
                         </div>
                         <div class="form-group"><label>Label Position</label><select id="labelPosition"><option>Top Left</option><option selected>Top Right</option><option>Bottom Left</option><option>Bottom Right</option></select></div>
@@ -550,7 +550,7 @@
 
             <div class="preview-column">
                 <div class="preview-card">
-                    <h3>Превʼю</h3>
+                    <h3>Preview</h3>
 
                     <div class="preview-device-toggle">
                         <button class="active" onclick="setDevice('desktop')">🖥️ Desktop</button>
@@ -605,9 +605,9 @@
         const widgets = readWidgets();
         const curr = widgetSelect.value;
         widgetSelect.innerHTML =
-          `<option value="">— Новий —</option>` +
+          `<option value="">— New —</option>` +
           widgets
-            .map((w) => `<option value="${String(w.id)}">${String(w.id)} — ${w.name || "Без назви"}</option>`)
+            .map((w) => `<option value="${String(w.id)}">${String(w.id)} — ${w.name || "Untitled"}</option>`)
             .join("");
         widgetSelect.value = curr;
       }
@@ -991,7 +991,7 @@
         writeJson(StorageKeys.nativeWidgetSettings, settings);
         refreshWidgetSelect();
         widgetSelect.value = String(meta.id);
-        alert('Native-інвентар збережено (плейсмент + налаштування).');
+        alert('Native inventory saved (placement + settings).');
       }
 
       function applySettingsToForm(settings) {
@@ -1032,7 +1032,7 @@
         document.getElementById('titleBold').checked = Boolean(settings.text?.titleBold ?? true);
         document.getElementById('titleItalic').checked = Boolean(settings.text?.titleItalic);
 
-        // Brand (legacy: only showBrand, false → увесь рядок бренду вимкнено)
+        // Brand (legacy: only showBrand, false → entire brand row off)
         document.getElementById('showBrandName').checked = Boolean(settings.brand?.showBrandName ?? settings.brand?.showBrand ?? true);
         {
           const hasExplicitBrandName = settings.brand != null && Object.prototype.hasOwnProperty.call(settings.brand, "showBrandName");
@@ -1079,20 +1079,20 @@
             applySettingsToForm(legacy);
             setPlacementMeta({ id: Number(widgetIdInput.value || 112345678), name: widgetNameInput.value, status: widgetStatusInput.checked });
             updatePreview();
-            return alert("Завантажено legacy-настройки (один віджет).");
+            return alert("Loaded legacy settings (single widget).");
           }
-          return alert("Немає збережених native-віджетів.");
+          return alert("No saved native widgets.");
         }
         const id = widgetSelect.value || String(widgets[0].id);
         const widget = widgets.find((w) => String(w.id) === String(id)) || widgets[0];
         setPlacementMeta(widget);
         applySettingsToForm(widget.settings);
         updatePreview();
-        alert("Віджет завантажено зі сховища.");
+        alert("Widget loaded from storage.");
       }
 
       document.getElementById("loadBtn").addEventListener("click", loadSaved);
-      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); refreshWidgetSelect(); alert("Сховище очищено."); });
+      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); refreshWidgetSelect(); alert("Storage cleared."); });
 
       widgetSelect.addEventListener("change", () => {
         const widgets = readWidgets();

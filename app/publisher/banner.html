@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Паблішер — Banner плейсменти</title>
+    <title>Publisher — Banner placements</title>
     <link rel="stylesheet" href="../shared/ui.css" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,7 +57,7 @@
         .btn.secondary { background: #f5f5f5; color: #555; border: 1px solid #bbb; }
         .btn.secondary:hover { background: #ebebeb; }
         .save-list { margin-top: 12px; }
-        /* Мультиселект розмірів (теги + dropdown) */
+        /* Multi-select sizes (tags + dropdown) */
         .flex-ms-label-row {
           display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;
         }
@@ -118,23 +118,23 @@
 </head>
 <body>
     <div class="container">
-        <nav class="uiAppNav" aria-label="Сторінки діагностичного стенду">
-          <span class="uiAppNav-label">Сторінки</span>
-          <a href="../index.html">Головна</a>
+        <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
+          <span class="uiAppNav-label">Pages</span>
+          <a href="../index.html">Home</a>
           <a href="../advertiser/banner.html">Banner Adv</a>
           <a href="../advertiser/native.html">Native Adv</a>
           <a class="active" href="./banner.html">Banner Web</a>
           <a href="./native.html">Native Web</a>
-          <a href="../demo/site.html">Демо сайт</a>
+          <a href="../demo/site.html">Demo site</a>
         </nav>
         <div class="uiTopbar">
           <div>
-            <h1>Паблішер — інвентар</h1>
-            <div class="uiSub"><a class="uiLink" href="../index.html">← Головна</a> · Інвентар зберігається в LocalStorage</div>
+            <h1>Publisher — inventory</h1>
+            <div class="uiSub"><a class="uiLink" href="../index.html">← Home</a> · Inventory is stored in LocalStorage</div>
           </div>
           <div class="uiActions">
-            <button class="uiBtn" type="button" id="loadBtn">Завантажити зі сховища</button>
-            <button class="uiBtn" type="button" id="resetBtn">Скинути сховище</button>
+            <button class="uiBtn" type="button" id="loadBtn">Load from storage</button>
+            <button class="uiBtn" type="button" id="resetBtn">Reset storage</button>
           </div>
         </div>
 
@@ -149,7 +149,7 @@
 
             <div class="panel">
                 <div class="panel-toolbar">
-                    <button class="btn" type="button" onclick="openSpotForm()">Додати плейсмент</button>
+                    <button class="btn" type="button" onclick="openSpotForm()">Add placement</button>
                 </div>
 
                 <table>
@@ -173,17 +173,17 @@
         <section class="page hidden" id="formView">
             <div class="form-page">
                 <div class="form-title">
-                    <h1 id="formTitle">Додати плейсмент</h1>
+                    <h1 id="formTitle">Add placement</h1>
                 </div>
 
                 <form id="spotForm" onsubmit="saveSpot(event)">
                     <div class="form-group">
-                        <label for="spotName">Назва</label>
+                        <label for="spotName">Name</label>
                         <input type="text" id="spotName" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="bannerSize">Розмір банера (основний підпис, якщо не flex)</label>
+                        <label for="bannerSize">Banner size (primary label if not flex)</label>
                         <select id="bannerSize">
                             <option>300x100</option>
                             <option>300x250</option>
@@ -205,18 +205,18 @@
                     <div class="form-group">
                         <label class="radio-row" style="cursor:pointer;">
                             <input type="checkbox" id="flexEnabled" style="width:16px;height:16px;accent-color:#239277;">
-                            Гнучкий слот (multi-size: desktop / mobile)
+                            Flexible slot (multi-size: desktop / mobile)
                         </label>
                         <div id="flexFields" style="display:none;margin-top:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;">
                             <div class="form-group">
                                 <div class="flex-ms-label-row">
-                                    <label>Desktop — пріоритет (порядок вибору)</label>
-                                    <button type="button" class="flex-ms-clear" data-flex-clear="desktop">Очистити все</button>
+                                    <label>Desktop — priority (pick order)</label>
+                                    <button type="button" class="flex-ms-clear" data-flex-clear="desktop">Clear all</button>
                                 </div>
                                 <div class="flex-ms" data-flex-tier="desktop">
                                     <div class="flex-ms-box" role="combobox" aria-expanded="false" aria-haspopup="listbox" tabindex="0">
                                         <div class="flex-ms-tags"></div>
-                                        <span class="flex-ms-placeholder">Оберіть розміри зі списку…</span>
+                                        <span class="flex-ms-placeholder">Choose sizes from the list…</span>
                                         <span class="flex-ms-caret" aria-hidden="true">▼</span>
                                     </div>
                                     <div class="flex-ms-dropdown" hidden role="listbox"></div>
@@ -224,40 +224,40 @@
                             </div>
                             <div class="form-group">
                                 <div class="flex-ms-label-row">
-                                    <label>Mobile — пріоритет (порядок вибору)</label>
-                                    <button type="button" class="flex-ms-clear" data-flex-clear="mobile">Очистити все</button>
+                                    <label>Mobile — priority (pick order)</label>
+                                    <button type="button" class="flex-ms-clear" data-flex-clear="mobile">Clear all</button>
                                 </div>
                                 <div class="flex-ms" data-flex-tier="mobile">
                                     <div class="flex-ms-box" role="combobox" aria-expanded="false" aria-haspopup="listbox" tabindex="0">
                                         <div class="flex-ms-tags"></div>
-                                        <span class="flex-ms-placeholder">Оберіть розміри зі списку…</span>
+                                        <span class="flex-ms-placeholder">Choose sizes from the list…</span>
                                         <span class="flex-ms-caret" aria-hidden="true">▼</span>
                                     </div>
                                     <div class="flex-ms-dropdown" hidden role="listbox"></div>
                                 </div>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label for="flexBp">Breakpoint (px): viewport ≤ цього значення → mobile tier</label>
+                                <label for="flexBp">Breakpoint (px): viewport ≤ this value → mobile tier</label>
                                 <input type="number" id="flexBp" min="0" step="1" value="600" style="max-width:140px;">
                             </div>
                             <div class="flex-ms-hint">
-                              Порядок тегів зліва направо = пріоритет для SDK (як ви додавали розміри зі списку). × прибирає значення.
+                              Tag order left-to-right = SDK priority (order you added sizes from the list). × removes a value.
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="creativeBind">Привʼязати креатив (опційно)</label>
+                        <label for="creativeBind">Bind creative (optional)</label>
                         <select id="creativeBind">
-                          <option value="">Авто: за розміром</option>
+                          <option value="">Auto: by size</option>
                         </select>
                         <div style="font-size:12px;color:#6b7280;margin-top:6px;">
-                          Якщо вибрано — віртуальний сайт відобразить саме цей креатив у плейсменті.
+                          If set, the virtual site shows this creative in the placement.
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Режим банера</label>
+                        <label>Banner mode</label>
                         <label class="radio-row">
                             <input type="radio" name="bannerMode" value="bright">
                             Bright
@@ -265,7 +265,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Статус</label>
+                        <label>Status</label>
                         <label class="switch">
                             <input type="checkbox" id="spotStatus" checked>
                             <span class="slider"></span>
@@ -274,7 +274,7 @@
 
                     <div class="form-actions">
                         <button class="btn" type="submit">Save</button>
-                        <button class="btn secondary" type="button" onclick="showListView()">Скасувати</button>
+                        <button class="btn secondary" type="button" onclick="showListView()">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -337,7 +337,7 @@
             (s) => `
           <span class="flex-ms-tag" data-size="${s}">
             <span class="flex-ms-tag-text">${label(s)}</span>
-            <button type="button" class="flex-ms-tag-x" data-tag-act="rm" title="Прибрати" aria-label="Прибрати">×</button>
+            <button type="button" class="flex-ms-tag-x" data-tag-act="rm" title="Remove" aria-label="Remove">×</button>
           </span>`,
           )
           .join("");
@@ -356,7 +356,7 @@
                   `<button type="button" class="flex-ms-opt" data-size="${s}" role="option">${s.replace(/x/gi, " × ")}</button>`,
               )
               .join("")
-          : `<div class="flex-ms-opt-empty">Усі розміри вже додані</div>`;
+          : `<div class="flex-ms-opt-empty">All sizes already added</div>`;
       }
 
       function closeAllFlexMsDropdowns() {
@@ -434,7 +434,7 @@
         if (!select) return;
         const creatives = ensureArray(readJson(StorageKeys.bannerCreatives, []));
         const current = select.value;
-        select.innerHTML = `<option value="">Авто: за розміром</option>` + creatives
+        select.innerHTML = `<option value="">Auto: by size</option>` + creatives
           .map((c) => `<option value="${String(c.id)}">${String(c.id)} (${c.type || "?"}, ${c.size || "?"})</option>`)
           .join("");
         select.value = current;
@@ -474,7 +474,7 @@
       window.openSpotForm = function (spotId) {
         editingSpotId = spotId || null;
         const spot = spots.find(item => item.id === spotId);
-        document.getElementById('formTitle').textContent = editingSpotId ? `Редагувати плейсмент` : `Додати плейсмент`;
+        document.getElementById('formTitle').textContent = editingSpotId ? `Edit placement` : `Add placement`;
         document.getElementById('spotName').value = spot ? spot.name : `Spot ${spots.length + 1}`;
         document.getElementById('bannerSize').value = spot ? spot.size : '300x250';
         document.getElementById('spotStatus').checked = spot ? spot.status : true;
@@ -562,20 +562,20 @@
 
       window.saveConfiguration = function () {
         persistSpots();
-        alert('Інвентар Banner збережено в LocalStorage.');
+        alert('Banner inventory saved to LocalStorage.');
       }
 
       function loadSaved() {
         const saved = ensureArray(readJson(StorageKeys.bannerSpots, []));
-        if (!saved.length) return alert("Немає збережених плейсментів.");
+        if (!saved.length) return alert("No saved placements.");
         spots = saved;
         bumpNextSpotIdFromList();
         renderSpots();
-        alert("Плейсменти завантажено зі сховища.");
+        alert("Placements loaded from storage.");
       }
 
       document.getElementById("loadBtn").addEventListener("click", loadSaved);
-      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); alert("Сховище очищено."); });
+      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); alert("Storage cleared."); });
       document.getElementById("flexEnabled")?.addEventListener("change", toggleFlexFields);
 
       document.getElementById("flexFields")?.addEventListener("click", (e) => {

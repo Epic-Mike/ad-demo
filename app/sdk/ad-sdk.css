@@ -29,7 +29,7 @@
   overflow: hidden;
 }
 
-/* Демо: id плейсмента при успішному рендері креативу */
+/* Demo: placement id on successful creative render */
 .adDiag-placementIdBadge {
   position: absolute;
   top: 3px;

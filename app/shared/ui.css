@@ -54,7 +54,7 @@ body{
 }
 .uiTab.active{ background:var(--green-100); border-color:var(--green-600); color:var(--green-900); }
 
-/* Глобальна навігація між усіма сторінками стенду */
+/* Global navigation across all sandbox pages */
 .uiAppNav{
   display:flex;
   flex-wrap:wrap;

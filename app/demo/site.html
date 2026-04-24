@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Віртуальний сайт — Діагностика реклами</title>
+    <title>Virtual site — Ad diagnostics</title>
     <link rel="stylesheet" href="../shared/ui.css" />
     <link rel="stylesheet" href="../sdk/ad-sdk.css" />
     <style>
       * { box-sizing: border-box; }
-      /* Ширший стенд, щоб у desktop-вʼюпорті нормально вміщалась сітка native 4×N (стаття + сайдбар ~300px). */
+      /* Wider sandbox so native 4×N grid fits in desktop viewport (article + ~300px sidebar). */
       .wrap { max-width: 1920px; margin: 0 auto; padding: 18px; }
       .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
       .btn {
@@ -50,7 +50,7 @@
       }
       .viewport.desktop { width: 1480px; max-width: 100%; }
       .viewport.mobile { width: 375px; }
-      /* Перемикач Banner / Native (setAdView) */
+      /* Banner / Native toggle (setAdView) */
       .viewport .hidden { display: none !important; }
 
       /* Fake publisher page — Times News–style (English) */
@@ -206,7 +206,7 @@
 
       .aside .bannerSlotBlock { margin-top: 16px; }
 
-      /* Довга сторінка: реклама «як у статті» — між абзацами, різна ширина */
+      /* Long page: in-article ads between paragraphs, varying width */
       .article { overflow-x: hidden; }
       .demoSection {
         margin-top: 28px;
@@ -233,8 +233,8 @@
       }
 
       /*
-        Medium rectangle 300×250: однакова логіка в статті, сітці колонок і сайдбарі —
-        SDK підганяє креатив під ширину слота; слот не ширший за 300px і центрований.
+        Medium rectangle 300×250: same behavior in article, column grid, and sidebar —
+        SDK fits creative to slot width; slot is at most 300px wide and centered.
       */
       .bannerSlot[data-banner-size="300x250"] {
         width: 100%;
@@ -270,7 +270,7 @@
         border: 2px dashed #f59e0b;
         background: #fef3c7;
         border-radius: 12px;
-        /* Не фіксуємо min-height: інакше на мобільному порожній слот лишається «як 728×90» навіть при 320×50 */
+        /* No fixed min-height: empty slot would stay “728×90-like” on mobile even for 320×50 */
         min-height: 0;
         padding: 10px;
         overflow: hidden;
@@ -298,25 +298,25 @@
   </head>
   <body>
     <div class="wrap">
-      <nav class="uiAppNav" aria-label="Сторінки діагностичного стенду">
-        <span class="uiAppNav-label">Сторінки</span>
-        <a href="../index.html">Головна</a>
+      <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
+        <span class="uiAppNav-label">Pages</span>
+        <a href="../index.html">Home</a>
         <a href="../advertiser/banner.html">Banner Adv</a>
         <a href="../advertiser/native.html">Native Adv</a>
         <a href="../publisher/banner.html">Banner Web</a>
         <a href="../publisher/native.html">Native Web</a>
-        <a class="active" href="./site.html">Демо сайт</a>
+        <a class="active" href="./site.html">Demo site</a>
       </nav>
       <div class="uiTopbar">
         <div>
-          <h1>Віртуальний вебсайт</h1>
+          <h1>Virtual website</h1>
           <div class="uiSub">
-            <a class="uiLink" href="../index.html">← Головна</a> · Відтворення Banner + Native із LocalStorage через SDK
+            <a class="uiLink" href="../index.html">← Home</a> · Renders Banner + Native from LocalStorage via the SDK
           </div>
           <div class="uiTabs" style="margin-top:10px;">
             <button class="uiTab active" type="button" id="showAllBtn">Banner + Native</button>
-            <button class="uiTab" type="button" id="showBannerBtn">Лише Banner</button>
-            <button class="uiTab" type="button" id="showNativeBtn">Лише Native</button>
+            <button class="uiTab" type="button" id="showBannerBtn">Banner only</button>
+            <button class="uiTab" type="button" id="showNativeBtn">Native only</button>
           </div>
         </div>
         <div class="controls">
@@ -325,7 +325,7 @@
             <button type="button" id="mobileBtn">Mobile</button>
           </div>
           <button class="btn" type="button" id="renderBtn">Render now</button>
-          <button class="btn primary" type="button" id="seedBtn">Заповнити демо-даними</button>
+          <button class="btn primary" type="button" id="seedBtn">Seed demo data</button>
           <button class="btn" type="button" id="resetBtn">Reset storage</button>
         </div>
       </div>
@@ -356,7 +356,7 @@
                 <article class="article">
                   <div class="bannerSlotBlock" data-banner-slot-block>
                     <div class="bannerSlot" data-banner-id="726435" data-banner-size="728x90">
-                      <div class="bannerSlotHint">data-banner-id="726435" · пріоритети розмірів у плейсменті (flex)</div>
+                      <div class="bannerSlotHint">data-banner-id="726435" · size priorities on placement (flex)</div>
                     </div>
                   </div>
 
@@ -419,7 +419,7 @@
 
                   <div class="bannerSlotBlock adBreak adBreak--tight" data-banner-slot-block>
                     <div class="bannerSlot" data-banner-id="726438" data-banner-size="468x60">
-                      <div class="bannerSlotHint">data-banner-id="726438" · між абзацами, «органічно» в тексті</div>
+                      <div class="bannerSlotHint">data-banner-id="726438" · between paragraphs, inline with article</div>
                     </div>
                   </div>
 
@@ -443,7 +443,7 @@
 
                   <div class="bannerSlotBlock adBreak" data-banner-slot-block>
                     <div class="bannerSlot" data-banner-id="726439" data-banner-size="728x90">
-                      <div class="bannerSlotHint">data-banner-id="726439" · широкий блок посеред довгого матеріалу</div>
+                      <div class="bannerSlotHint">data-banner-id="726439" · wide block mid long-form article</div>
                     </div>
                   </div>
 
@@ -498,7 +498,7 @@
 
                   <div class="bannerSlotBlock adBreak" data-banner-slot-block>
                     <div class="bannerSlot" data-banner-id="726441" data-banner-size="970x250">
-                      <div class="bannerSlotHint">data-banner-id="726441" · гнучкі розміри можна задати в Banner Web</div>
+                      <div class="bannerSlotHint">data-banner-id="726441" · flexible sizes configurable in Banner Web</div>
                     </div>
                   </div>
 
@@ -565,7 +565,7 @@
 
                   <div class="bannerSlotBlock" data-banner-slot-block>
                     <div class="bannerSlot" data-banner-id="726437" data-banner-size="300x250">
-                      <div class="bannerSlotHint">data-banner-id="726437" · сайдбар</div>
+                      <div class="bannerSlotHint">data-banner-id="726437" · sidebar</div>
                     </div>
                   </div>
                 </aside>
@@ -575,14 +575,14 @@
         </div>
 
         <div class="panel">
-          <h2>Інспектор</h2>
+          <h2>Inspector</h2>
           <div class="inspectorRow">
-            <label><input id="debugToggle" type="checkbox" />Показувати причини (debug)</label>
-            <span class="small">У банерних слотах при увімкненому debug текст причин може бути в жовтих плейсментах. Якщо немає native-креативів, у слоті показується підпис; для колоночного плейсмента додаються розміри сітки desktop/mobile у дужках, наприклад <code>(3×1/1×3)</code>.</span>
+            <label><input id="debugToggle" type="checkbox" />Show reasons (debug)</label>
+            <span class="small">With debug on, banner slots may show reason text in yellow placeholders. If there are no native creatives, the slot shows a label; for columnar placements, desktop/mobile grid sizes are appended in parentheses, e.g. <code>(3×1/1×3)</code>.</span>
           </div>
           <div class="inspectorRow" style="margin-top:8px;">
-            <label><input id="emptyToggle" type="checkbox" />Показувати порожні плейсменти</label>
-            <span class="small">Якщо вимкнено — плейсменти без реклами/налаштувань будуть приховані.</span>
+            <label><input id="emptyToggle" type="checkbox" />Show empty placements</label>
+            <span class="small">If off, placements without ads or configuration are hidden.</span>
           </div>
           <pre id="inspectOut">{}</pre>
         </div>
@@ -879,7 +879,7 @@
       mobileBtn.addEventListener("click", () => { applyDevice("mobile"); renderNow(); });
       document.getElementById("renderBtn").addEventListener("click", renderNow);
       document.getElementById("seedBtn").addEventListener("click", seed);
-      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); renderNow(); alert("Сховище очищено."); });
+      document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); renderNow(); alert("Storage cleared."); });
 
       debugToggle.addEventListener("change", (e) => {
         setRuntime({ debug: e.target.checked });
