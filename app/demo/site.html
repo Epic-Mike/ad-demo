@@ -353,8 +353,6 @@
             <button type="button" id="desktopBtn">Desktop</button>
             <button type="button" id="mobileBtn">Mobile</button>
           </div>
-          <button class="btn" type="button" id="renderBtn">Render now</button>
-          <button class="btn primary" type="button" id="seedBtn">Seed demo data</button>
           <button class="btn" type="button" id="resetBtn">Reset storage</button>
         </div>
       </div>
@@ -920,16 +918,6 @@
         writeJson(StorageKeys.nativeWidgetSettings, cloneJson(defaultSettings));
       }
 
-      function seedDataOnly() {
-        seedBannerInventoryOnly();
-        seedNativeInventoryOnly();
-      }
-
-      function seed() {
-        seedDataOnly();
-        renderNow();
-      }
-
       function syncDynamicBannerSlots() {
         const host = document.getElementById("dynamicInventoryBannerHost");
         if (!host) return;
@@ -1047,8 +1035,6 @@
 
       desktopBtn.addEventListener("click", () => { applyDevice("desktop"); renderNow(); });
       mobileBtn.addEventListener("click", () => { applyDevice("mobile"); renderNow(); });
-      document.getElementById("renderBtn").addEventListener("click", renderNow);
-      document.getElementById("seedBtn").addEventListener("click", seed);
       document.getElementById("resetBtn").addEventListener("click", () => { resetAll(); renderNow(); alert("Storage cleared."); });
 
       debugToggle.addEventListener("change", (e) => {
