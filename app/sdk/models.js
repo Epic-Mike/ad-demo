@@ -57,6 +57,10 @@ export function normalizeBannerSize(size) {
  * - creativeId?: string — опційна привʼязка; у flex-режимі матчиться лише якщо розмір креатива збігається з одним із пріоритетних для поточного tier
  * - flexSizes?: { desktop: string[], mobile: string[], breakpoint?: number }
  *   Пріоритетні розміри за tier; ширина viewport ≤ breakpoint (або runtime.device === "mobile") → mobile tier
+ *
+ * Рендер (ad-sdk): якщо точного збігу за розміром немає, за замовчуванням підбираються менші креативи,
+ * що вміщуються в габарити плейсмента; при достатній ширині показуються до 3 плиток у ряд.
+ * Вимкнути: opts.bannerSizeFallback === false
  */
 
 /**

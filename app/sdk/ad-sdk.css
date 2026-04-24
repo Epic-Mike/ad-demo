@@ -23,6 +23,10 @@
   background: #fff;
 }
 
+.adDiag-bannerTile {
+  box-sizing: border-box;
+}
+
 /* Safety: never overflow parent containers */
 [data-banner-id]{
   max-width: 100%;

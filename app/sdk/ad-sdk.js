@@ -69,6 +69,63 @@ function findBannerCreativeById(creatives, creativeId) {
   return ensureArray(creatives).find((c) => c && String(c.id) === idStr) || null;
 }
 
+function bannerSizeFallbackEnabled(opts) {
+  if (opts && typeof opts.bannerSizeFallback === "boolean") return opts.bannerSizeFallback;
+  return true;
+}
+
+/** Креативи, що повністю вміщуються в габарити плейсмента; за спаданням площі (спочатку «найбільший з менших»). */
+function listFittingBannerCreatives(creatives, slotW, slotH) {
+  if (!Number.isFinite(slotW) || !Number.isFinite(slotH) || slotW <= 0 || slotH <= 0) return [];
+  const out = [];
+  for (const c of ensureArray(creatives)) {
+    if (!c || !c.size) continue;
+    const d = parseBannerDims(c.size);
+    if (!d || d.w > slotW || d.h > slotH) continue;
+    out.push(c);
+  }
+  out.sort((a, b) => {
+    const da = parseBannerDims(a.size);
+    const db = parseBannerDims(b.size);
+    if (!da || !db) return 0;
+    return db.w * db.h - da.w * da.h;
+  });
+  return out;
+}
+
+/**
+ * До maxTiles креативів у ряд, якщо ширина плейсмента дозволяє розмістити принаймні два природних блоки.
+ * Інакше один менший банер. Ротація по відсортованому списку (різні креативи, якщо є).
+ */
+function chooseBannerTilesForSlot(fittingSorted, slotW, maxTiles = 3, gapPx = 8) {
+  if (!fittingSorted.length) return [];
+  const first = fittingSorted[0];
+  const d = parseBannerDims(first.size);
+  if (!d) return [first];
+  const unit = d.w + gapPx;
+  const maxByWidth = Math.floor((slotW + gapPx) / unit);
+  const n = Math.min(maxTiles, Math.max(1, maxByWidth));
+  const tiles = [];
+  for (let i = 0; i < n; i++) tiles.push(fittingSorted[i % fittingSorted.length]);
+  return tiles;
+}
+
+function spotDimsForFallback(spot, tier, slotEl, opts, viewportWidth) {
+  if (spot && hasFlexSizes(spot) && tier) {
+    const list = flexSizePriority(spot, tier);
+    const first = list[0];
+    if (first) {
+      const p = parseBannerDims(first);
+      if (p) return p;
+    }
+  }
+  if (spot?.size) {
+    const p = parseBannerDims(spot.size);
+    if (p) return p;
+  }
+  return resolveEmptySlotDims(slotEl, opts, viewportWidth, spot, tier);
+}
+
 function hasFlexSizes(spot) {
   const f = spot?.flexSizes;
   if (!f || typeof f !== "object") return false;
@@ -198,6 +255,54 @@ function applyEmptyBannerSlotLayout(slotEl, dims, viewportWidth) {
   slotEl.style.boxSizing = "border-box";
 }
 
+function appendBannerCreativeContent(slotEl, creative, spot, opts, contentOpts = {}) {
+  const skipBadge = Boolean(contentOpts.skipBadge);
+  if (creative.type === "simple") {
+    const img = el("img", {
+      class: "adDiag-bannerImg",
+      src: creative.assets?.imageDataUrl || "",
+      alt: "Banner",
+    });
+    slotEl.appendChild(img);
+    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts);
+    return { ok: true };
+  }
+
+  if (creative.type === "selfcode") {
+    const iframe = el("iframe", {
+      class: "adDiag-bannerFrame",
+      sandbox: "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox",
+      referrerpolicy: "no-referrer",
+      title: "Selfcode Banner",
+    });
+    slotEl.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(String(creative.assets?.html || ""));
+      doc.close();
+    }
+    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts);
+    return { ok: true };
+  }
+
+  if (creative.type === "html5") {
+    slotEl.appendChild(
+      el("div", {
+        class: "adDiag-html5Stub",
+        text: `HTML5 ZIP loaded (${creative.assets?.fileName || "unknown"})`,
+      }),
+    );
+    if (!skipBadge) appendPlacementIdBadge(slotEl, spot?.id, opts);
+    return { ok: true, warning: "html5_stub" };
+  }
+
+  if (debugEnabled(opts)) {
+    slotEl.appendChild(el("div", { class: "adDiag-slotEmpty", text: "Unknown banner type" }));
+  }
+  return { ok: false, reason: "unknown_banner_type" };
+}
+
 function renderBannerIntoSlot(slotEl, creative, spot, opts) {
   clearNode(slotEl);
   slotEl.style.width = "";
@@ -239,51 +344,66 @@ function renderBannerIntoSlot(slotEl, creative, spot, opts) {
     slotEl.style.maxWidth = "100%";
   }
 
-  if (creative.type === "simple") {
-    const img = el("img", {
-      class: "adDiag-bannerImg",
-      src: creative.assets?.imageDataUrl || "",
-      alt: "Banner",
+  return appendBannerCreativeContent(slotEl, creative, spot, opts);
+}
+
+/** Кілька менших банерів у межах одного плейсмента (fallback за шириною до 3 плиток). */
+function renderBannerTilesIntoSlot(slotEl, tiles, outerSpot, opts) {
+  clearNode(slotEl);
+  slotEl.style.width = "";
+  slotEl.style.height = "";
+  slotEl.style.maxWidth = "";
+
+  const size = normalizeBannerSize(outerSpot?.size || tiles[0]?.size);
+  const parsed = parseBannerDims(size);
+  const w = parsed ? parsed.w : 300;
+  const h = parsed ? parsed.h : 250;
+
+  slotEl.style.display = "";
+  const paddingAllowance = 0;
+  const parentW = slotEl.parentElement?.clientWidth || slotEl.clientWidth || w;
+  const maxW = Math.max(1, parentW - paddingAllowance);
+  const fittedOuterW = Math.min(w, maxW);
+  const scaleOuter = fittedOuterW / w;
+  const fittedOuterH = Math.max(1, Math.round(h * scaleOuter));
+  slotEl.style.width = `${fittedOuterW}px`;
+  slotEl.style.minHeight = `${fittedOuterH}px`;
+  slotEl.style.height = "auto";
+  slotEl.style.maxWidth = "100%";
+  slotEl.style.boxSizing = "border-box";
+  slotEl.style.display = "flex";
+  slotEl.style.flexDirection = "row";
+  slotEl.style.flexWrap = "wrap";
+  slotEl.style.gap = "8px";
+  slotEl.style.alignItems = "flex-start";
+  slotEl.style.justifyContent = "flex-start";
+
+  const gap = 8;
+  const dimsList = tiles.map((t) => parseBannerDims(t.size)).filter(Boolean);
+  const sumNatW = dimsList.reduce((s, d) => s + d.w, 0) + gap * (tiles.length - 1);
+  let innerScale = 1;
+  if (sumNatW > fittedOuterW && sumNatW > 0) innerScale = fittedOuterW / sumNatW;
+
+  let worst = { ok: true };
+  tiles.forEach((creative) => {
+    const wrap = el("div", {
+      class: "adDiag-bannerTile",
+      style: { position: "relative", flex: "0 0 auto", overflow: "hidden" },
     });
-    slotEl.appendChild(img);
-    appendPlacementIdBadge(slotEl, spot?.id, opts);
-    return { ok: true };
-  }
+    const cd = parseBannerDims(creative.size);
+    const iw = cd ? Math.max(1, Math.round(cd.w * innerScale)) : 100;
+    const ih = cd ? Math.max(1, Math.round(cd.h * innerScale)) : 100;
+    wrap.style.width = `${iw}px`;
+    wrap.style.height = `${ih}px`;
+    slotEl.appendChild(wrap);
+    const r = appendBannerCreativeContent(wrap, creative, outerSpot, opts, { skipBadge: true });
+    if (!r.ok) worst = r;
+    else if (r.warning) worst = { ...worst, warning: r.warning };
+  });
 
-  if (creative.type === "selfcode") {
-    const iframe = el("iframe", {
-      class: "adDiag-bannerFrame",
-      sandbox: "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox",
-      referrerpolicy: "no-referrer",
-      title: "Selfcode Banner",
-    });
-    slotEl.appendChild(iframe);
-    const doc = iframe.contentWindow?.document;
-    if (doc) {
-      doc.open();
-      doc.write(String(creative.assets?.html || ""));
-      doc.close();
-    }
-    appendPlacementIdBadge(slotEl, spot?.id, opts);
-    return { ok: true };
-  }
-
-  if (creative.type === "html5") {
-    // MVP: only show metadata; real HTML5 ZIP playback can be added later
-    slotEl.appendChild(
-      el("div", {
-        class: "adDiag-html5Stub",
-        text: `HTML5 ZIP loaded (${creative.assets?.fileName || "unknown"})`,
-      }),
-    );
-    appendPlacementIdBadge(slotEl, spot?.id, opts);
-    return { ok: true, warning: "html5_stub" };
-  }
-
-  if (debugEnabled(opts)) {
-    slotEl.appendChild(el("div", { class: "adDiag-slotEmpty", text: "Unknown banner type" }));
-  }
-  return { ok: false, reason: "unknown_banner_type" };
+  appendPlacementIdBadge(slotEl, outerSpot?.id, opts);
+  if (!worst.ok) return worst;
+  return { ok: true, fallback: "smaller_tiles", warning: worst.warning };
 }
 
 export function renderBannerSlots(root = document, opts = {}) {
@@ -335,6 +455,7 @@ export function renderBannerSlots(root = document, opts = {}) {
     let creative = null;
     let effectiveSpot = spot;
     let tier = null;
+    let pickedViaSizeFallback = false;
     if (hasFlexSizes(spot)) {
       tier = pickBannerTier(root, opts, spot, viewportWidth);
       const picked = pickFlexBannerCreative(spot, creatives, tier);
@@ -344,6 +465,36 @@ export function renderBannerSlots(root = document, opts = {}) {
     } else {
       creative =
         findBannerCreativeById(creatives, spot.creativeId) || findBannerCreative(creatives, spot.size);
+    }
+
+    if (!creative && bannerSizeFallbackEnabled(opts)) {
+      const fd = spotDimsForFallback(spot, tier, slotEl, opts, viewportWidth);
+      if (fd) {
+        const fitting = listFittingBannerCreatives(creatives, fd.w, fd.h);
+        const tiles = chooseBannerTilesForSlot(fitting, fd.w, 3, 8);
+        if (tiles.length > 1) {
+          slotEl.style.display = "";
+          setBannerSlotBlockHidden(slotEl, false);
+          const outerSpot = { ...spot, size: normalizeBannerSize(`${fd.w}x${fd.h}`) };
+          const r = renderBannerTilesIntoSlot(slotEl, tiles, outerSpot, opts);
+          return {
+            spotId,
+            spot,
+            tier,
+            flex: hasFlexSizes(spot),
+            creativeId: tiles.map((t) => t.id).join(","),
+            pickedSize: outerSpot.size,
+            fallback: r.fallback,
+            ok: r.ok,
+            warning: r.warning,
+          };
+        }
+        if (tiles.length === 1) {
+          creative = tiles[0];
+          effectiveSpot = { ...spot, size: normalizeBannerSize(`${fd.w}x${fd.h}`) };
+          pickedViaSizeFallback = true;
+        }
+      }
     }
 
     if (!creative) {
@@ -393,6 +544,7 @@ export function renderBannerSlots(root = document, opts = {}) {
       creativeId: creative?.id || null,
       pickedSize: effectiveSpot?.size || null,
       ...r,
+      ...(pickedViaSizeFallback && r.ok ? { fallback: "smaller_single" } : {}),
     };
   });
 

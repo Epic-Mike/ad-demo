@@ -10,6 +10,13 @@
         /* Layout aligned with advertiser banner.html */
         .container { max-width: 1400px; margin: 0 auto; padding: 18px; }
         .titleBlock h1 { margin: 0; font-size: 16px; font-weight: 900; }
+        .bannerTopSubRow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin-top: 4px; }
+        .bannerTopIdWrap { display: inline-flex; align-items: center; gap: 8px; }
+        .bannerTopIdWrap label { font-size: 12px; font-weight: 800; color: #374151; white-space: nowrap; margin: 0; }
+        .bannerTopIdWrap input {
+          width: 220px; max-width: 42vw; border: 1px solid #ddd; border-radius: 8px; padding: 6px 10px; font-size: 13px;
+        }
+        .bannerTopIdNote { margin-top: 6px; }
         .main-layout { display: flex; gap: 16px; align-items: stretch; }
         @media (max-width: 900px) { .main-layout { flex-direction: column; } }
         .card {
@@ -141,9 +148,16 @@
         <div class="uiTopbar">
           <div class="titleBlock">
             <h1>Advertiser — creatives</h1>
-            <div class="uiSub">
-              <a class="uiLink" href="../index.html">← Home</a> · Creatives are stored in LocalStorage
+            <div class="bannerTopSubRow">
+              <div class="uiSub" style="margin-top:0;">
+                <a class="uiLink" href="../index.html">← Home</a> · Creatives are stored in LocalStorage
+              </div>
+              <div class="bannerTopIdWrap">
+                <label for="idInput">Creative ID</label>
+                <input type="text" id="idInput" placeholder="e.g. native-001" maxlength="40">
+              </div>
             </div>
+            <div class="note bannerTopIdNote">You can store multiple creatives (upsert by ID).</div>
           </div>
           <div class="uiActions">
             <label class="uiSub" style="display:inline-flex;align-items:center;gap:8px;margin:0;">
@@ -161,12 +175,6 @@
             <div class="card">
                 <div class="card-scrollable">
                 <div class="column-heading">Essentials</div>
-
-                <div class="form-group">
-                    <label>Creative ID</label>
-                    <input type="text" id="idInput" placeholder="e.g. native-001" maxlength="40">
-                    <div class="note">You can store multiple creatives (upsert by ID).</div>
-                </div>
 
                 <div class="form-group">
                     <label>Headline <span class="required">*</span></label>
