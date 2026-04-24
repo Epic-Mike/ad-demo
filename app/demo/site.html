@@ -827,66 +827,9 @@
         mobileBtn.classList.toggle("active", runtime.device === "mobile");
       }
 
-      /** Банерний інвентар (креативи + spots) — окремо, щоб на хостингу не затирати натив, якщо він уже є. */
-      function seedBannerInventoryOnly() {
-        writeJson(StorageKeys.bannerCreatives, [
-          { id: "banner-" + uuid(), createdAt: nowIso(), type: "simple", size: "300x250", assets: { imageDataUrl: null } },
-          {
-            id: "banner-" + uuid(),
-            createdAt: nowIso(),
-            type: "selfcode",
-            size: "300x250",
-            assets: {
-              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 16px system-ui;background:#0f766e;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">MREC 300×250</a></body></html>`,
-            },
-          },
-          {
-            id: "banner-" + uuid(),
-            createdAt: nowIso(),
-            type: "selfcode",
-            size: "728x90",
-            assets: {
-              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:900 18px system-ui;background:#111827;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">Selfcode 728x90</a></body></html>`,
-            },
-          },
-          {
-            id: "banner-" + uuid(),
-            createdAt: nowIso(),
-            type: "selfcode",
-            size: "320x50",
-            assets: {
-              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 13px system-ui;background:#0f766e;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">Mobile 320×50</a></body></html>`,
-            },
-          },
-          {
-            id: "banner-" + uuid(),
-            createdAt: nowIso(),
-            type: "selfcode",
-            size: "468x60",
-            assets: {
-              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:800 14px system-ui;background:#7c3aed;color:white;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">468×60</a></body></html>`,
-            },
-          },
-          {
-            id: "banner-" + uuid(),
-            createdAt: nowIso(),
-            type: "selfcode",
-            size: "160x600",
-            assets: {
-              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:700 15px system-ui;writing-mode:vertical-rl;text-orientation:mixed;background:#0369a1;color:white;text-decoration:none;padding:8px}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">160×600</a></body></html>`,
-            },
-          },
-          {
-            id: "banner-" + uuid(),
-            createdAt: nowIso(),
-            type: "selfcode",
-            size: "970x250",
-            assets: {
-              html: `<!doctype html><html><head><meta charset="utf-8"/><style>html,body{margin:0}a{display:grid;place-items:center;width:100%;height:100%;font:900 22px system-ui;background:#14532d;color:#ecfccb;text-decoration:none}</style></head><body><a href="https://example.com" target="_blank" rel="noreferrer">970×250</a></body></html>`,
-            },
-          },
-        ]);
-        writeJson(StorageKeys.bannerSpots, [
+      /** Плейсменти під розмітку демо-сайту; банерні креативи лише з Banner Adv (користувач). */
+      function defaultBannerSpotsForDemo() {
+        return [
           {
             id: 726435,
             name: "Top Leaderboard",
@@ -916,7 +859,11 @@
               breakpoint: 600,
             },
           },
-        ]);
+        ];
+      }
+
+      function seedBannerInventoryOnly() {
+        writeJson(StorageKeys.bannerSpots, defaultBannerSpotsForDemo());
       }
 
       function seedNativeInventoryOnly() {
@@ -1104,13 +1051,15 @@
         renderNow();
       });
 
-      // init — на Render часто лише частина ключів порожня (або після часткового скидання): добираємо демо без зайвого затиру того, що вже є
+      // init — spots для демо-верстки; банерні креативи не підставляємо (тільки з адмінки). Не затираємо креативи, якщо лишились без spots.
       {
         const bc0 = ensureArray(readJson(StorageKeys.bannerCreatives, []));
         const bs0 = ensureArray(readJson(StorageKeys.bannerSpots, []));
         const nc0 = ensureArray(readJson(StorageKeys.nativeCreatives, []));
         const nw0 = ensureArray(readJson(StorageKeys.nativeWidgets, []));
-        if (!bc0.length || !bs0.length) seedBannerInventoryOnly();
+        const hadSpots = bs0.length > 0;
+        if (!bs0.length) writeJson(StorageKeys.bannerSpots, defaultBannerSpotsForDemo());
+        if (!bc0.length && !hadSpots) writeJson(StorageKeys.bannerCreatives, []);
         if (!nc0.length || !nw0.length) seedNativeInventoryOnly();
       }
 
