@@ -42,7 +42,6 @@
           <div class="uiSub">Advertiser → Publisher (Banner + Native)</div>
         </div>
         <div class="uiActions">
-          <button id="seedBtn" class="uiBtn uiBtnPrimary" type="button">Seed demo data</button>
           <button id="resetBtn" class="uiBtn" type="button">Reset (clear LocalStorage)</button>
         </div>
       </div>
@@ -83,97 +82,8 @@
     </div>
 
     <script type="module">
-      import { StorageKeys, nowIso, uuid } from "./sdk/models.js";
-      import { readJson, writeJson, resetAll, cloneJson } from "./sdk/storage.js";
-      import {
-        DEMO_NATIVE_WIDGET_SPECS,
-        defaultNativeWidgetSettings,
-        nativeGrid3SettingsFrom,
-      } from "./sdk/native-demo-defaults.js";
+      import { resetAll } from "./sdk/storage.js";
 
-      function seed() {
-        // Banner spots (match demo slots; creatives only from user — не чіпаємо bannerCreatives)
-        const bannerSpots = [
-          {
-            id: 726435,
-            name: "Top Leaderboard",
-            size: "728x90",
-            status: true,
-            mode: "",
-            flexSizes: {
-              desktop: ["728x90", "970x250"],
-              mobile: ["320x50", "300x250"],
-              breakpoint: 600,
-            },
-          },
-          { id: 726436, name: "Inline Rect", size: "300x250", status: true, mode: "" },
-          { id: 726437, name: "Sidebar", size: "300x250", status: true, mode: "" },
-          { id: 726438, name: "In-article strip", size: "468x60", status: true, mode: "" },
-          { id: 726439, name: "Mid article LDB", size: "728x90", status: true, mode: "" },
-          { id: 726440, name: "Rail skyscraper", size: "160x600", status: true, mode: "" },
-          {
-            id: 726441,
-            name: "Article mega",
-            size: "970x250",
-            status: true,
-            mode: "",
-            flexSizes: {
-              desktop: ["970x250", "728x90"],
-              mobile: ["300x250", "320x50"],
-              breakpoint: 600,
-            },
-          },
-        ];
-        writeJson(StorageKeys.bannerSpots, bannerSpots);
-
-        const nativeCreatives = [
-          {
-            id: "native-" + uuid(),
-            createdAt: nowIso(),
-            title: "Summer sale: up to 50% off",
-            description: "Limited time offer. Browse deals and save on bestsellers.",
-            ctaText: "Learn More",
-            brandName: "Brand",
-            assets: { mainImageDataUrl: null, logoDataUrl: null },
-          },
-          {
-            id: "native-" + uuid(),
-            createdAt: nowIso(),
-            title: "Weekend reads bundle",
-            description: "Editors pick long-form reporting and analysis you may have missed.",
-            ctaText: "Browse",
-            brandName: "Times Books",
-            assets: { mainImageDataUrl: null, logoDataUrl: null },
-          },
-          {
-            id: "native-" + uuid(),
-            createdAt: nowIso(),
-            title: "Member perks · audio edition",
-            description: "Listen to articles offline. New narrations every weekday morning.",
-            ctaText: "Try free",
-            brandName: "Times Audio",
-            assets: { mainImageDataUrl: null, logoDataUrl: null },
-          },
-        ];
-        writeJson(StorageKeys.nativeCreatives, nativeCreatives);
-
-        const settings = readJson(StorageKeys.nativeWidgetSettings, null) || defaultNativeWidgetSettings();
-        const grid3Settings = nativeGrid3SettingsFrom(settings);
-        writeJson(
-          StorageKeys.nativeWidgets,
-          DEMO_NATIVE_WIDGET_SPECS.map((spec) => ({
-            id: spec.id,
-            name: spec.name,
-            status: true,
-            settings: cloneJson(spec.grid3 ? grid3Settings : settings),
-          })),
-        );
-        writeJson(StorageKeys.nativeWidgetSettings, cloneJson(settings));
-
-        alert("Demo data saved. Open the virtual website.");
-      }
-
-      document.getElementById("seedBtn").addEventListener("click", seed);
       document.getElementById("resetBtn").addEventListener("click", () => {
         resetAll();
         alert("LocalStorage cleared.");
