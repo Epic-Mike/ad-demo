@@ -18,7 +18,37 @@
             background: white; border: 1px solid #ddd; border-radius: 8px; padding: 24px;
             flex: 1; min-width: 0; display: flex; flex-direction: column; height: 600px; overflow: hidden;
         }
-        .card:last-child { flex: 1.2; }
+        .uiTopbar--banner { align-items: flex-start; }
+        .bannerToolbar {
+          flex: 1 1 100%;
+          margin-top: 12px;
+          padding-top: 14px;
+          border-top: 1px solid var(--border, #e5e7eb);
+        }
+        .bannerToolbarRow { margin-bottom: 12px; }
+        .bannerToolbarRow:last-child { margin-bottom: 0; }
+        .bannerToolbarRow--type {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 10px 18px;
+        }
+        .bannerToolbarRow--type .block-label {
+          font-size: 12px;
+          font-weight: 800;
+          color: #374151;
+          margin: 0;
+        }
+        .bannerToolbar .type-options-inline {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px 20px;
+          align-items: center;
+        }
+        .bannerToolbar .type-option { margin-bottom: 0; font-size: 14px; }
+        .bannerToolbar .size-label { margin-top: 4px; }
+        .bannerToolbar .size-grid { margin-bottom: 0; }
+        #bannerAssetCard .card-scrollable { display: flex; flex-direction: column; gap: 12px; }
         .card-scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin: -24px; padding: 24px; }
         .type-option { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; cursor: pointer; font-size: 15px; color: #555; }
         .type-option input[type="radio"] { width: 18px; height: 18px; accent-color: #5cb85c; }
@@ -94,10 +124,10 @@
         .mock-site-mobile .slot-top { margin: 0 16px; padding: 12px 0; }
         .mock-site-mobile .slot-inline { margin: 8px 0; justify-content: center; }
         .scale-indicator { text-align: center; font-size: 11px; color: #999; margin-top: 8px; flex-shrink: 0; }
-        .selfcode-area { display: none; margin-top: 16px; }
+        .selfcode-area { display: none; }
         .selfcode-area textarea { width: 100%; min-height: 140px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 12px; resize: vertical; }
         .selfcode-area .hint { font-size: 12px; color: #999; margin-top: 6px; }
-        .html5-upload { display: none; margin-top: 16px; }
+        .html5-upload { display: none; }
         .html5-upload .upload-zone { padding: 24px; min-height: 150px; }
         .actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px; }
         .btn-save { background: var(--green-700); color: white; border: none; padding: 10px 28px; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; }
@@ -141,7 +171,7 @@
           <a href="../demo/site.html">Demo site</a>
           <a class="uiLink" style="margin-left: auto" href="../login.html" onclick="try { sessionStorage.removeItem('adDiagAuth'); } catch (e) {}">Log out</a>
         </nav>
-        <div class="uiTopbar">
+        <div class="uiTopbar uiTopbar--banner">
           <div class="titleBlock">
             <h1>Advertiser — creatives</h1>
             <div class="bannerTopSubRow">
@@ -165,66 +195,50 @@
             <button class="uiBtn" type="button" id="loadBtn">Load selected</button>
             <button class="uiBtn" type="button" id="resetBtn">Reset storage</button>
           </div>
+
+          <div class="bannerToolbar">
+            <div class="bannerToolbarRow bannerToolbarRow--type">
+              <span class="block-label">Ad type</span>
+              <div class="type-options-inline">
+                <label class="type-option">
+                  <input type="radio" name="adType" value="simple" checked onchange="switchType('simple')">
+                  Simple
+                </label>
+                <label class="type-option">
+                  <input type="radio" name="adType" value="selfcode" onchange="switchType('selfcode')">
+                  Selfcode
+                </label>
+                <label class="type-option">
+                  <input type="radio" name="adType" value="html5" onchange="switchType('html5')">
+                  HTML5 ZIP (stub)
+                </label>
+              </div>
+            </div>
+            <div class="bannerToolbarRow">
+              <div class="size-label">Choose size (px)</div>
+              <div class="size-grid" id="sizeGrid">
+                <button class="size-btn" onclick="selectSize(this, 300, 100)">300×100</button>
+                <button class="size-btn mobile-friendly active" onclick="selectSize(this, 300, 250)">300×250</button>
+                <button class="size-btn" onclick="selectSize(this, 300, 600)">300×600</button>
+                <button class="size-btn" onclick="selectSize(this, 728, 90)">728×90</button>
+                <button class="size-btn" onclick="selectSize(this, 900, 250)">900×250</button>
+                <button class="size-btn mobile-friendly" onclick="selectSize(this, 250, 250)">250×250</button>
+                <button class="size-btn mobile-friendly" onclick="selectSize(this, 300, 50)">300×50</button>
+                <button class="size-btn mobile-friendly" onclick="selectSize(this, 320, 480)">320×480</button>
+                <button class="size-btn mobile-friendly" onclick="selectSize(this, 320, 50)">320×50</button>
+                <button class="size-btn" onclick="selectSize(this, 160, 600)">160×600</button>
+                <button class="size-btn" onclick="selectSize(this, 970, 250)">970×250</button>
+                <button class="size-btn mobile-friendly" onclick="selectSize(this, 336, 280)">336×280</button>
+                <button class="size-btn" onclick="selectSize(this, 468, 60)">468×60</button>
+                <button class="size-btn" onclick="selectSize(this, 120, 600)">120×600</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="main-layout">
-            <!-- Column 1: Ad Type -->
-            <div class="card">
+        <div class="main-layout" id="bannerMainLayout">
+            <div class="card" id="bannerAssetCard">
                 <div class="card-scrollable">
-                    <label class="type-option">
-                        <input type="radio" name="adType" value="simple" checked onchange="switchType('simple')">
-                        Simple
-                    </label>
-                    <label class="type-option">
-                        <input type="radio" name="adType" value="selfcode" onchange="switchType('selfcode')">
-                        Selfcode
-                    </label>
-                    <label class="type-option">
-                        <input type="radio" name="adType" value="html5" onchange="switchType('html5')">
-                        HTML5 ZIP (stub)
-                    </label>
-
-                    <div class="selfcode-area" id="selfcodeArea">
-                        <textarea id="selfcodeText" placeholder="<!-- Paste HTML/JS here -->"></textarea>
-                        <div class="hint">Rendered on the virtual site in a sandboxed iframe.</div>
-                    </div>
-
-                    <div class="html5-upload" id="html5Area">
-                        <div class="upload-zone" onclick="document.getElementById('html5File').click()">
-                            <div class="upload-icon"><div class="plus">+</div></div>
-                            <div class="upload-text">
-                                <strong>Upload ZIP archive</strong><br>
-                                index.html + assets<br>
-                                Max 2MB (not enforced)
-                            </div>
-                        </div>
-                        <input type="file" id="html5File" accept=".zip" style="display: none;">
-                        <div class="note" id="html5Meta"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Column 2: Upload & Sizes -->
-            <div class="card">
-                <div class="card-scrollable">
-                    <div class="size-label">Choose size (px)</div>
-                    <div class="size-grid" id="sizeGrid">
-                        <button class="size-btn" onclick="selectSize(this, 300, 100)">300×100</button>
-                        <button class="size-btn mobile-friendly active" onclick="selectSize(this, 300, 250)">300×250</button>
-                        <button class="size-btn" onclick="selectSize(this, 300, 600)">300×600</button>
-                        <button class="size-btn" onclick="selectSize(this, 728, 90)">728×90</button>
-                        <button class="size-btn" onclick="selectSize(this, 900, 250)">900×250</button>
-                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 250, 250)">250×250</button>
-                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 300, 50)">300×50</button>
-                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 320, 480)">320×480</button>
-                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 320, 50)">320×50</button>
-                        <button class="size-btn" onclick="selectSize(this, 160, 600)">160×600</button>
-                        <button class="size-btn" onclick="selectSize(this, 970, 250)">970×250</button>
-                        <button class="size-btn mobile-friendly" onclick="selectSize(this, 336, 280)">336×280</button>
-                        <button class="size-btn" onclick="selectSize(this, 468, 60)">468×60</button>
-                        <button class="size-btn" onclick="selectSize(this, 120, 600)">120×600</button>
-                    </div>
-
                     <div class="upload-zone" id="simpleUpload" onclick="document.getElementById('bannerFile').click()">
                         <div class="upload-icon"><div class="plus">+</div></div>
                         <div class="upload-text">
@@ -235,10 +249,26 @@
                     </div>
                     <input type="file" id="bannerFile" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
                     <div class="note" id="simpleMeta"></div>
+                    <div class="selfcode-area" id="selfcodeArea">
+                      <textarea id="selfcodeText" placeholder="<!-- Paste HTML/JS here -->"></textarea>
+                      <div class="hint">Rendered on the virtual site in a sandboxed iframe.</div>
+                    </div>
+                    <div class="html5-upload" id="html5Area">
+                      <div class="upload-zone" onclick="document.getElementById('html5File').click()">
+                        <div class="upload-icon"><div class="plus">+</div></div>
+                        <div class="upload-text">
+                          <strong>Upload ZIP archive</strong><br>
+                          index.html + assets<br>
+                          Max 2MB (not enforced)
+                        </div>
+                      </div>
+                      <input type="file" id="html5File" accept=".zip" style="display: none;">
+                      <div class="note" id="html5Meta"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Column 3: Preview -->
+            <!-- Preview -->
             <div class="card">
                 <div class="preview-header">
                     <h3>Preview</h3>
@@ -582,14 +612,21 @@
 
       window.switchType = function (type) {
         const simpleUpload = document.getElementById('simpleUpload');
+        const simpleMeta = document.getElementById('simpleMeta');
         const selfcodeArea = document.getElementById('selfcodeArea');
         const html5Area = document.getElementById('html5Area');
         simpleUpload.style.display = 'none';
+        simpleMeta.style.display = 'none';
         selfcodeArea.style.display = 'none';
         html5Area.style.display = 'none';
-        if (type === 'simple') simpleUpload.style.display = 'flex';
-        else if (type === 'selfcode') selfcodeArea.style.display = 'block';
-        else if (type === 'html5') html5Area.style.display = 'block';
+        if (type === 'simple') {
+          simpleUpload.style.display = 'flex';
+          simpleMeta.style.display = '';
+        } else if (type === 'selfcode') {
+          selfcodeArea.style.display = 'block';
+        } else if (type === 'html5') {
+          html5Area.style.display = 'block';
+        }
         updatePreviewPlacement();
       }
 
@@ -721,6 +758,8 @@
         populateSavedBannerSelect();
         syncSizeLockFromCreativeId();
         initPreviewDeviceFromTabs();
+        const t = document.querySelector('input[name="adType"]:checked')?.value || 'simple';
+        window.switchType(t);
       });
     </script>
 </body>

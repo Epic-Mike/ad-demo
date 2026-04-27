@@ -1,6 +1,9 @@
 import { StorageKeys, normalizeBannerSize } from "./models.js";
 import { ensureArray, migrateIfNeeded, readJson } from "./storage.js";
 
+/** TEMP: false — знову показувати brand/logo у нативному віджеті (узгодьте з publisher/native.html). */
+const TEMP_SUPPRESS_NATIVE_BRAND_ROW = true;
+
 /**
  * Джерело інвентарю банерів: opts.bannerSpots / opts.bannerCreatives, далі
  * window.__AD_DIAG__.bannerSpots / .bannerCreatives (для вбудовування без спільного localStorage з адмінкою),
@@ -786,13 +789,17 @@ function applyNativeSettings(widgetEl, settings, layoutMode) {
   // Brand: name, logo, CTA are independent. Legacy `showBrand: false` hid the whole row — keep that if `showBrandName` was never saved.
   const legacyShowBrand = settings?.brand?.showBrand;
   const hasExplicitBrandName = settings?.brand != null && Object.prototype.hasOwnProperty.call(settings.brand, "showBrandName");
-  const showBrandName = hasExplicitBrandName
+  let showBrandName = hasExplicitBrandName
     ? Boolean(settings.brand.showBrandName)
     : legacyShowBrand === false
       ? false
       : Boolean(legacyShowBrand ?? true);
   let showLogo = Boolean(settings?.brand?.showLogo ?? true);
   if (!hasExplicitBrandName && legacyShowBrand === false) {
+    showLogo = false;
+  }
+  if (TEMP_SUPPRESS_NATIVE_BRAND_ROW) {
+    showBrandName = false;
     showLogo = false;
   }
   const brandRowVisible = showBrandName || showLogo;

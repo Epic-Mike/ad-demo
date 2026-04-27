@@ -205,6 +205,8 @@
 
         .preview-info { margin-top: 14px; padding: 10px 12px; background: #f9fafb; border-radius: 10px; font-size: 12px; color: #6b7280; }
         .preview-info code { background: #e5e7eb; padding: 2px 6px; border-radius: 8px; font-size: 11px; }
+        /* TEMP: прибрати правило й клас tempHiddenPublisherNativeBrand з секції + прапорець у script (узгодити з ad-sdk.js) */
+        .tempHiddenPublisherNativeBrand { display: none !important; }
     </style>
 </head>
 <body>
@@ -450,7 +452,7 @@
                     </div>
                 </div>
 
-                <div class="section">
+                <div class="section tempHiddenPublisherNativeBrand">
                     <div class="section-header" onclick="toggleSection(this)">
                         <h2>Brand & logo</h2>
                         <span class="arrow">▼</span>
@@ -578,6 +580,9 @@
     <script type="module">
       import { StorageKeys } from "../sdk/models.js";
       import { ensureArray, migrateIfNeeded, readJson, writeJson, resetAll } from "../sdk/storage.js";
+
+      /** TEMP: false — узгодьте з TEMP_SUPPRESS_NATIVE_BRAND_ROW у ../sdk/ad-sdk.js */
+      const TEMP_SUPPRESS_NATIVE_BRAND_ROW = true;
 
       migrateIfNeeded();
 
@@ -848,8 +853,8 @@
           el.style.overflow = 'hidden';
         });
 
-        const showBrandName = document.getElementById('showBrandName').checked;
-        const showLogo = document.getElementById('showLogo').checked;
+        const showBrandName = TEMP_SUPPRESS_NATIVE_BRAND_ROW ? false : document.getElementById('showBrandName').checked;
+        const showLogo = TEMP_SUPPRESS_NATIVE_BRAND_ROW ? false : document.getElementById('showLogo').checked;
         const brandRowVisible = showBrandName || showLogo;
         const brandColor = document.getElementById('brandColor').value;
         const brandSize = document.getElementById('brandSize').value;
