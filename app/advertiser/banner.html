@@ -105,10 +105,40 @@
         .mock-sidebar.hidden { display: none; }
         .mock-sidebar-box { height: 120px; background: #e0e0e0; border-radius: 4px; flex-shrink: 0; }
         .banner-slot { background: #fff3cd; border: 2px dashed #ffc107; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; }
+        /* У flex з align-items:center iframe з height:100% не розтягується — виходить «біла плашка» */
+        .banner-slot.has-ad { display: block; background: transparent; border: none; }
         .banner-slot .banner-ad { display: block; width: 100%; height: 100%; object-fit: contain; }
-        .banner-slot iframe.selfcode-preview-frame { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
-        .banner-slot .slot-label { position: absolute; font-size: 11px; color: #ffc107; background: white; padding: 3px 8px; border-radius: 3px; pointer-events: none; font-weight: 500; white-space: nowrap; }
-        .banner-slot.has-ad { background: transparent; border: none; }
+        /* Масштаб превʼю Selfcode/HTML5 під слот (contain + центр), якщо креатив має інші фіксовані px */
+        .banner-slot.has-ad .banner-slot-iframeFit {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: #0f172a;
+        }
+        .banner-slot.has-ad .banner-slot-iframeFit-inner {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform-origin: center center;
+        }
+        .banner-slot iframe.selfcode-preview-frame {
+          display: block;
+          border: 0;
+          margin: 0;
+          padding: 0;
+          vertical-align: top;
+          background: #fff;
+        }
+        .banner-slot .slot-label.html5-preview-err {
+          color: #b91c1c;
+          background: #fee2e2;
+          max-width: 100%;
+          white-space: normal;
+          text-align: left;
+          position: static;
+          pointer-events: auto;
+        }
         .banner-slot.has-ad .slot-label { display: none; }
         .slot-top { margin: 0 16px; padding: 12px 0; background: #f8f9fa; display: flex; justify-content: center; flex-shrink: 0; }
         .slot-inline { margin: 8px 0; display: flex; justify-content: center; flex-shrink: 0; }
@@ -127,7 +157,6 @@
         .scale-indicator { text-align: center; font-size: 11px; color: #999; margin-top: 8px; flex-shrink: 0; }
         .selfcode-area { display: none; }
         .selfcode-area textarea { width: 100%; min-height: 140px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 12px; resize: vertical; }
-        .selfcode-area .hint { font-size: 12px; color: #999; margin-top: 6px; }
         .html5-upload { display: none; }
         .html5-upload .upload-zone { padding: 24px; min-height: 150px; }
         .actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px; }
@@ -161,6 +190,7 @@
 </head>
 <body>
     <script src="../shared/require-auth.js"></script>
+    <script src="../shared/vendor/jszip.min.js"></script>
     <div class="container">
         <nav class="uiAppNav" aria-label="Diagnostic sandbox pages">
           <span class="uiAppNav-label">Pages</span>
@@ -211,7 +241,7 @@
                 </label>
                 <label class="type-option">
                   <input type="radio" name="adType" value="html5" onchange="switchType('html5')">
-                  HTML5 ZIP (stub)
+                  HTML5 ZIP
                 </label>
               </div>
             </div>
@@ -252,7 +282,6 @@
                     <div class="note" id="simpleMeta"></div>
                     <div class="selfcode-area" id="selfcodeArea">
                       <textarea id="selfcodeText" placeholder="<!-- Paste HTML/JS here -->"></textarea>
-                      <div class="hint">Rendered on the virtual site in a sandboxed iframe.</div>
                     </div>
                     <div class="html5-upload" id="html5Area">
                       <div class="upload-zone" onclick="document.getElementById('html5File').click()">
@@ -376,10 +405,190 @@
       let currentHeight = 250;
       let uploadedImage = null;
       let html5Meta = { fileName: null, fileSize: null };
+      /** Розпакований превʼю HTML5 у памʼяті (не зберігається в LocalStorage) */
+      let html5PreviewState = { srcdoc: null, error: null, blobUrls: [] };
+
       /** Після збереження або завантаження зі сховища — інші пресети розмірів вимкнені */
       let bannerSizeLocked = false;
 
       const creativeIdInput = document.getElementById("creativeId");
+
+      function revokeHtml5PreviewBlobs() {
+        for (const u of html5PreviewState.blobUrls) {
+          try {
+            URL.revokeObjectURL(u);
+          } catch {
+            /* ignore */
+          }
+        }
+        html5PreviewState = { srcdoc: null, error: null, blobUrls: [] };
+      }
+
+      function escapeHtmlBanner(s) {
+        return String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      const HTML5_MIME_BY_EXT = {
+        ".html": "text/html; charset=utf-8",
+        ".htm": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".svg": "image/svg+xml",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+        ".woff2": "font/woff2",
+        ".woff": "font/woff",
+        ".ttf": "font/ttf",
+        ".otf": "font/otf",
+        ".mp4": "video/mp4",
+        ".webm": "video/webm",
+      };
+
+      function normalizeZipPath(p) {
+        return String(p || "")
+          .replace(/\\/g, "/")
+          .replace(/^\/+/, "");
+      }
+
+      function zipPathDirname(p) {
+        const n = normalizeZipPath(p);
+        const i = n.lastIndexOf("/");
+        return i <= 0 ? "" : n.slice(0, i);
+      }
+
+      function zipJoinResolve(dir, rel) {
+        const r = normalizeZipPath(rel);
+        if (!r) return "";
+        const base = dir ? `${normalizeZipPath(dir)}/` : "";
+        const parts = (base + r).split("/");
+        const out = [];
+        for (const seg of parts) {
+          if (!seg || seg === ".") continue;
+          if (seg === "..") out.pop();
+          else out.push(seg);
+        }
+        return out.join("/");
+      }
+
+      function mimeFromZipPath(zipKey) {
+        const m = normalizeZipPath(zipKey).match(/\.([a-z0-9]+)$/i);
+        const ext = m ? `.${m[1].toLowerCase()}` : "";
+        return HTML5_MIME_BY_EXT[ext] || "application/octet-stream";
+      }
+
+      function findZipIndexEntryKey(zip) {
+        let best = null;
+        let bestDepth = Infinity;
+        for (const key of Object.keys(zip.files)) {
+          if (zip.files[key].dir) continue;
+          const n = normalizeZipPath(key);
+          if (!/(^|\/)index\.html$/i.test(n)) continue;
+          const depth = n.split("/").length;
+          if (depth < bestDepth) {
+            bestDepth = depth;
+            best = key;
+          }
+        }
+        return best;
+      }
+
+      function buildZipInsensitiveKeyMap(zip) {
+        const map = new Map();
+        for (const key of Object.keys(zip.files)) {
+          if (zip.files[key].dir) continue;
+          map.set(normalizeZipPath(key).toLowerCase(), key);
+        }
+        return map;
+      }
+
+      function html5ShouldRewriteAssetUrl(barePath) {
+        if (!barePath) return false;
+        if (barePath.startsWith("#")) return false;
+        if (/^(https?:|data:|mailto:|javascript:)/i.test(barePath)) return false;
+        if (barePath.startsWith("//")) return false;
+        return true;
+      }
+
+      async function rewriteHtml5AssetRefs(zip, indexKey, html, keyMapLower, blobUrls) {
+        const indexDir = zipPathDirname(normalizeZipPath(indexKey));
+        const urlByResolvedLc = new Map();
+
+        async function ensureBlobForResolvedLc(lc) {
+          if (urlByResolvedLc.has(lc)) return urlByResolvedLc.get(lc);
+          const zipKey = keyMapLower.get(lc);
+          if (!zipKey) {
+            urlByResolvedLc.set(lc, null);
+            return null;
+          }
+          const buf = await zip.files[zipKey].async("arraybuffer");
+          const blob = new Blob([buf], { type: mimeFromZipPath(zipKey) });
+          const u = URL.createObjectURL(blob);
+          blobUrls.push(u);
+          urlByResolvedLc.set(lc, u);
+          return u;
+        }
+
+        const re = /\b(src|href)\s*=\s*(["'])((?:\\\2|(?!\2).)*?)\2/gi;
+        const seen = new Set();
+        for (const m of html.matchAll(re)) {
+          const rawUrl = String(m[3]).trim();
+          const bare = rawUrl.split("#")[0].split("?")[0];
+          if (!html5ShouldRewriteAssetUrl(bare)) continue;
+          const resolved = zipJoinResolve(indexDir, bare);
+          if (resolved) seen.add(resolved.toLowerCase());
+        }
+        re.lastIndex = 0;
+        await Promise.all([...seen].map((lc) => ensureBlobForResolvedLc(lc)));
+
+        return html.replace(re, (full, attr, q, rawInner) => {
+          const url = String(rawInner).trim();
+          const bare = url.split("#")[0].split("?")[0];
+          if (!html5ShouldRewriteAssetUrl(bare)) return full;
+          const resolved = zipJoinResolve(indexDir, bare).toLowerCase();
+          const blobUrl = urlByResolvedLc.get(resolved);
+          if (!blobUrl) return full;
+          return `${attr}=${q}${blobUrl}${q}`;
+        });
+      }
+
+      async function rebuildHtml5PreviewFromFile(file) {
+        revokeHtml5PreviewBlobs();
+        if (!file) {
+          updatePreviewPlacement();
+          return;
+        }
+        const blobUrls = [];
+        try {
+          if (typeof window.JSZip !== "function") {
+            throw new Error("JSZip не завантажено (файл app/shared/vendor/jszip.min.js).");
+          }
+          const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
+          const indexKey = findZipIndexEntryKey(zip);
+          if (!indexKey) throw new Error("У архіві немає index.html");
+          const keyMapLower = buildZipInsensitiveKeyMap(zip);
+          let html = await zip.files[indexKey].async("string");
+          html = await rewriteHtml5AssetRefs(zip, indexKey, html, keyMapLower, blobUrls);
+          html5PreviewState = { srcdoc: html, error: null, blobUrls };
+        } catch (e) {
+          for (const u of blobUrls) {
+            try {
+              URL.revokeObjectURL(u);
+            } catch {
+              /* ignore */
+            }
+          }
+          html5PreviewState = { srcdoc: null, error: e.message || String(e), blobUrls: [] };
+        }
+        updatePreviewPlacement();
+      }
 
       function setIdIfEmpty() {
         if (!creativeIdInput.value.trim()) creativeIdInput.value = "banner-" + uuid().slice(0, 8);
@@ -449,6 +658,69 @@
         slot.style.height = h + 'px';
       }
 
+      function primeIframeBoxToSlot(slotEl, iframe) {
+        const sw = slotEl.clientWidth;
+        const sh = slotEl.clientHeight;
+        if (sw >= 1 && sh >= 1) {
+          iframe.style.width = `${sw}px`;
+          iframe.style.height = `${sh}px`;
+        }
+      }
+
+      /** Масштаб iframe-превʼю Selfcode/HTML5 під поточний розмір слота (як contain). */
+      function applyPreviewIframeScale(slotEl, iframe) {
+        if (!slotEl || !iframe) return;
+        try {
+          const doc = iframe.contentDocument;
+          if (!doc || !doc.body) return;
+          const body = doc.body;
+          const root = doc.documentElement;
+          const iw = Math.max(body.scrollWidth, root.scrollWidth, body.offsetWidth, 1);
+          const ih = Math.max(body.scrollHeight, root.scrollHeight, body.offsetHeight, 1);
+          const slotW = slotEl.clientWidth;
+          const slotH = slotEl.clientHeight;
+          if (slotW < 1 || slotH < 1) return;
+          const scale = Math.min(slotW / iw, slotH / ih);
+          const inner = iframe.parentElement;
+          if (!inner || !inner.classList.contains("banner-slot-iframeFit-inner")) return;
+          iframe.style.width = `${iw}px`;
+          iframe.style.height = `${ih}px`;
+          inner.style.width = `${iw}px`;
+          inner.style.height = `${ih}px`;
+          inner.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        } catch {
+          /* ignore */
+        }
+      }
+
+      function bindPreviewIframeScale(slotEl, iframe) {
+        const run = () => applyPreviewIframeScale(slotEl, iframe);
+        iframe.addEventListener("load", () => {
+          requestAnimationFrame(run);
+          setTimeout(run, 50);
+          setTimeout(run, 250);
+        });
+        requestAnimationFrame(run);
+      }
+
+      function refitAllAdvertiserBannerPreviewIframes() {
+        document.querySelectorAll(".banner-slot.has-ad iframe.selfcode-preview-frame").forEach((iframe) => {
+          const slot = iframe.closest(".banner-slot");
+          if (slot) applyPreviewIframeScale(slot, iframe);
+        });
+      }
+
+      function wrapPreviewIframe(slotEl, iframe) {
+        const fit = document.createElement("div");
+        fit.className = "banner-slot-iframeFit";
+        const inner = document.createElement("div");
+        inner.className = "banner-slot-iframeFit-inner";
+        inner.appendChild(iframe);
+        fit.appendChild(inner);
+        slotEl.appendChild(fit);
+        bindPreviewIframeScale(slotEl, iframe);
+      }
+
       function placeAd(slot) {
         const type = document.querySelector('input[name="adType"]:checked').value;
         if (type === "simple" && uploadedImage) {
@@ -463,15 +735,11 @@
             const iframe = document.createElement("iframe");
             iframe.className = "selfcode-preview-frame";
             iframe.title = "Selfcode preview";
-            iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox");
+            iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox");
             iframe.setAttribute("referrerpolicy", "no-referrer");
-            slot.appendChild(iframe);
-            const doc = iframe.contentWindow && iframe.contentWindow.document;
-            if (doc) {
-              doc.open();
-              doc.write(html);
-              doc.close();
-            }
+            wrapPreviewIframe(slot, iframe);
+            primeIframeBoxToSlot(slot, iframe);
+            iframe.srcdoc = html;
             slot.classList.add("has-ad");
           } else {
             slot.innerHTML = `<span class="slot-label">Selfcode — вставте HTML</span>`;
@@ -479,7 +747,27 @@
           return;
         }
         if (type === "html5") {
-          slot.innerHTML = `<span class="slot-label">HTML5 ZIP preview (stub)</span>`;
+          if (html5PreviewState.error) {
+            slot.innerHTML = `<span class="slot-label html5-preview-err">${escapeHtmlBanner(html5PreviewState.error)}</span>`;
+            return;
+          }
+          if (html5PreviewState.srcdoc) {
+            slot.innerHTML = "";
+            const iframe = document.createElement("iframe");
+            iframe.className = "selfcode-preview-frame";
+            iframe.title = "HTML5 preview";
+            iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox");
+            iframe.setAttribute("referrerpolicy", "no-referrer");
+            wrapPreviewIframe(slot, iframe);
+            primeIframeBoxToSlot(slot, iframe);
+            iframe.srcdoc = html5PreviewState.srcdoc;
+            slot.classList.add("has-ad");
+            return;
+          }
+          const hint = html5Meta.fileName
+            ? `Завантажено ${escapeHtmlBanner(html5Meta.fileName)} — очікуйте розпаковку`
+            : "Оберіть ZIP з index.html у корені";
+          slot.innerHTML = `<span class="slot-label">${hint}</span>`;
         }
       }
 
@@ -496,6 +784,7 @@
         const scale = Math.min(scaleX, scaleY, 1);
         scaler.className = isMobile ? 'preview-scaler mobile-mode' : 'preview-scaler';
         scaler.style.transform = `scale(${scale})`;
+        requestAnimationFrame(() => refitAllAdvertiserBannerPreviewIframes());
       }
 
       function showMobileWarning(slot, currentSize) {
@@ -647,6 +936,8 @@
           selfcodeArea.style.display = 'block';
         } else if (type === 'html5') {
           html5Area.style.display = 'block';
+          const zf = document.getElementById("html5File").files && document.getElementById("html5File").files[0];
+          if (zf && !html5PreviewState.srcdoc) rebuildHtml5PreviewFromFile(zf);
         }
         updatePreviewPlacement();
       }
@@ -668,7 +959,8 @@
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         html5Meta = { fileName: file.name, fileSize: file.size };
-        document.getElementById("html5Meta").textContent = `Selected: ${file.name} (${Math.round(file.size/1024)}KB)`;
+        document.getElementById("html5Meta").textContent = `Selected: ${file.name} (${Math.round(file.size / 1024)}KB)`;
+        rebuildHtml5PreviewFromFile(file);
       });
 
       document.getElementById("selfcodeText").addEventListener("input", () => {
@@ -718,6 +1010,7 @@
       }
 
       function applyBannerCreativeToForm(last) {
+        revokeHtml5PreviewBlobs();
         bannerSizeLocked = false;
         creativeIdInput.value = last.id || "";
         const size = String(last.size || "300x250").toLowerCase();
@@ -761,6 +1054,10 @@
       document.getElementById("loadBtn").addEventListener("click", loadSelectedBannerIntoForm);
       document.getElementById("resetBtn").addEventListener("click", () => {
         resetAll();
+        revokeHtml5PreviewBlobs();
+        html5Meta = { fileName: null, fileSize: null };
+        document.getElementById("html5Meta").textContent = "";
+        document.getElementById("html5File").value = "";
         populateSavedBannerSelect();
         bannerSizeLocked = false;
         updateBannerSizeLockUI();
