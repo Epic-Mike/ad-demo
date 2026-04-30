@@ -106,6 +106,7 @@
         .mock-sidebar-box { height: 120px; background: #e0e0e0; border-radius: 4px; flex-shrink: 0; }
         .banner-slot { background: #fff3cd; border: 2px dashed #ffc107; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; }
         .banner-slot .banner-ad { display: block; width: 100%; height: 100%; object-fit: contain; }
+        .banner-slot iframe.selfcode-preview-frame { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
         .banner-slot .slot-label { position: absolute; font-size: 11px; color: #ffc107; background: white; padding: 3px 8px; border-radius: 3px; pointer-events: none; font-weight: 500; white-space: nowrap; }
         .banner-slot.has-ad { background: transparent; border: none; }
         .banner-slot.has-ad .slot-label { display: none; }
@@ -453,9 +454,29 @@
         if (type === "simple" && uploadedImage) {
           slot.innerHTML = `<img src="${uploadedImage}" class="banner-ad" alt="Banner">`;
           slot.classList.add('has-ad');
+          return;
         }
         if (type === "selfcode") {
-          slot.innerHTML = `<span class="slot-label">Selfcode preview</span>`;
+          const html = String(document.getElementById("selfcodeText").value || "").trim();
+          if (html) {
+            slot.innerHTML = "";
+            const iframe = document.createElement("iframe");
+            iframe.className = "selfcode-preview-frame";
+            iframe.title = "Selfcode preview";
+            iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox");
+            iframe.setAttribute("referrerpolicy", "no-referrer");
+            slot.appendChild(iframe);
+            const doc = iframe.contentWindow && iframe.contentWindow.document;
+            if (doc) {
+              doc.open();
+              doc.write(html);
+              doc.close();
+            }
+            slot.classList.add("has-ad");
+          } else {
+            slot.innerHTML = `<span class="slot-label">Selfcode — вставте HTML</span>`;
+          }
+          return;
         }
         if (type === "html5") {
           slot.innerHTML = `<span class="slot-label">HTML5 ZIP preview (stub)</span>`;
@@ -648,6 +669,12 @@
         if (!file) return;
         html5Meta = { fileName: file.name, fileSize: file.size };
         document.getElementById("html5Meta").textContent = `Selected: ${file.name} (${Math.round(file.size/1024)}KB)`;
+      });
+
+      document.getElementById("selfcodeText").addEventListener("input", () => {
+        if (document.querySelector('input[name="adType"]:checked')?.value === "selfcode") {
+          updatePreviewPlacement();
+        }
       });
 
       function currentCreativePayload() {

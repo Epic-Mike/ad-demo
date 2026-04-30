@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="ad.size" content="width=300,height=250">
+  <title>HTML5 Banner 300×250</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    html, body {
+      width: 300px; height: 250px;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+      background: #111827;
+    }
+    .stage {
+      position: relative;
+      width: 100%; height: 100%;
+      background: linear-gradient(145deg, #4338ca, #a21caf);
+    }
+    .orb {
+      position: absolute;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      filter: blur(0px);
+      animation: float 3.5s ease-in-out infinite;
+    }
+    .orb:nth-child(1) { left: 24px; top: 40px; animation-delay: 0s; }
+    .orb:nth-child(2) { right: 32px; bottom: 50px; animation-delay: .7s; width: 56px; height: 56px; }
+    .content {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; padding: 16px;
+      color: #fff; text-align: center;
+    }
+    h1 {
+      font-size: 18px; font-weight: 800;
+      text-shadow: 0 2px 12px rgba(0,0,0,.35);
+    }
+    p { margin-top: 8px; font-size: 12px; opacity: .9; line-height: 1.4; }
+    .btn {
+      margin-top: 14px;
+      padding: 8px 20px;
+      border-radius: 8px;
+      background: #fbbf24; color: #1f2937;
+      font-weight: 800; font-size: 12px; text-decoration: none;
+      box-shadow: 0 4px 0 #b45309;
+      transition: transform .15s;
+    }
+    .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b45309; }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(8px, -10px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="ad-root" class="stage">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="content">
+      <h1>HTML5 ZIP — демо</h1>
+      <p>Заархівуй цю теку як <strong>ZIP</strong> (index.html у корені) і завантаж у формі.</p>
+      <a class="btn" href="https://example.com/html5-demo" target="_blank" rel="noopener noreferrer">CTA</a>
+    </div>
+  </div>
+</body>
+</html>

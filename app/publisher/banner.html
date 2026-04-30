@@ -37,7 +37,23 @@
         .col-actions { width: 10%; }
         .code-cell { display: grid; grid-template-columns: minmax(120px, 1fr) auto; gap: 8px; align-items: center; }
         .code-input { width: 100%; height: 28px; border: 1px solid #c8c8c8; border-radius: 8px; padding: 3px 8px; color: #777; font-size: 12px; text-align: center; background: #fff; }
-        .copy-btn { border: 0; background: transparent; color: #15aa8b; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+        .copy-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          padding: 0;
+          border: 0;
+          border-radius: 10px;
+          background: #0d9488;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: background 0.15s ease;
+        }
+        .copy-btn:hover { background: #0f766e; }
+        .copy-btn:focus-visible { outline: 2px solid var(--green-600, #059669); outline-offset: 2px; }
+        .copy-btn svg { display: block; }
         .icon-btn { width: 28px; height: 28px; border: 1px solid #e5e7eb; background: #fff; border-radius: 8px; cursor: pointer; color: #111; font-size: 14px; line-height: 28px; }
         .icon-btn:hover { border-color: #27a84f; color: #27a84f; }
         .switch { position: relative; display: inline-block; width: 31px; height: 14px; }
@@ -462,7 +478,7 @@
             <td>
               <div class="code-cell">
                 <input class="code-input" type="text" readonly value='${htmlCode(spot)}'>
-                <button class="copy-btn" type="button" onclick="copyHtmlCode(${spot.id})">copy HTML-code</button>
+                <button class="copy-btn" type="button" title="Copy HTML code" aria-label="Copy HTML code" onclick="copyHtmlCode(${spot.id})"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="10" y="4" width="10" height="10" rx="2" stroke="#fff" stroke-width="1.85" fill="none"/><rect x="4" y="10" width="10" height="10" rx="2" stroke="#fff" stroke-width="1.85" fill="none"/></svg></button>
               </div>
             </td>
             <td>
